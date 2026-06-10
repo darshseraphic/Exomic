@@ -62,6 +62,8 @@ class SavingGoalModel extends HiveObject {
   final String deadline;
   @HiveField(5)
   final double dailyPaceRequired;
+  @HiveField(6)
+  final List<String>? history; // FIXED: Added history persistence log node
 
   SavingGoalModel({
     required this.id,
@@ -70,6 +72,7 @@ class SavingGoalModel extends HiveObject {
     required this.current,
     required this.deadline,
     required this.dailyPaceRequired,
+    this.history,
   });
 }
 

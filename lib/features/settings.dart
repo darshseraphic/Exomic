@@ -51,30 +51,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     final bgColor = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFFAFAFA);
+    final borderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: bgColor,
-          shape: const RoundedRectangleBorder(
-            side: BorderSide(color: Colors.transparent, width: 0),
-            borderRadius: BorderRadius.zero,
-          ),
-          title: Text(
-            '// NOTICE',
-            style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Courier'),
-          ),
-          content: Text(
-            'MODULE_UNDER_DEV.\nFUTURE_FIRMWARE_REQ.',
-            style: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Courier', letterSpacing: 0.2),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('[ OK ]', style: TextStyle(color: textMain, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Courier')),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: bgColor,
+              border: Border.all(color: borderColor, width: 0.8),
             ),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NOTICE',
+                  style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Inter', letterSpacing: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'This module is currently under active development. Future firmware releases are required to unlock external networking capabilities.',
+                  style: TextStyle(color: textSub, fontSize: 13, fontFamily: 'Inter', height: 1.4),
+                ),
+                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        '[ OK ]',
+                        style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -86,150 +106,160 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
+    final systemTextColor = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     final screenBg = isDark ? const Color(0xFF050505) : const Color(0xFFFAFAFA);
     final borderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
 
-    return Scaffold(
-      backgroundColor: screenBg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('// CONFIG_PANEL', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Courier')),
-              const SizedBox(height: 24),
+    return Theme(
+      // FIX: Override text selection handles (violet/blue pin) to match custom monochrome aesthetic
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: textMain,
+          selectionColor: textMain.withOpacity(0.2),
+          selectionHandleColor: textMain,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: screenBg,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('SETTINGS', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')),
+                const SizedBox(height: 24),
 
-              // THEME INTERFACE RULE (WITH PERSISTENT MUTATION)
-              _buildActionTile(
-                label: 'UI_THEME_MODE',
-                valueText: isDark ? '[ DARK ]' : '[ LIGHT ]',
-                borderColor: borderColor,
-                textMain: textMain,
-                onTap: () async {
-                  final newTheme = !isDark;
-                  ref.read(settingsThemeModeProvider.notifier).state = newTheme;
-                  await ExomicDatabaseEngine.saveThemeMode(newTheme);
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // CURRENCY CONTROLLER MATRIX
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  border: Border.all(color: borderColor, width: 0.8),
+                // THEME INTERFACE RULE (WITH PERSISTENT MUTATION)
+                _buildActionTile(
+                  label: 'UI THEME MODE',
+                  valueText: isDark ? '[ DARK ]' : '[ LIGHT ]',
+                  borderColor: borderColor,
+                  textMain: textMain,
+                  onTap: () async {
+                    final newTheme = !isDark;
+                    ref.read(settingsThemeModeProvider.notifier).state = newTheme;
+                    await ExomicDatabaseEngine.saveThemeMode(newTheme);
+                  },
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text('GLOBAL_CURRENCY', style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Courier')),
-                    ),
-                    SizedBox(
-                      width: 60,
-                      child: TextField(
-                        controller: _currencyController,
-                        textAlign: TextAlign.right,
-                        style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Courier'),
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          hintText: '\$',
-                          hintStyle: TextStyle(color: textSub),
-                        ),
-                        onChanged: (value) {
-                          ref.read(currencyProvider.notifier).state = value;
-                        },
+                const SizedBox(height: 12),
+
+                // CURRENCY CONTROLLER MATRIX
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(color: borderColor, width: 0.8),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text('GLOBAL CURRENCY', style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter')),
                       ),
+                      SizedBox(
+                        width: 60,
+                        child: TextField(
+                          controller: _currencyController,
+                          textAlign: TextAlign.right,
+                          style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            hintText: '\$',
+                            hintStyle: TextStyle(color: textSub),
+                          ),
+                          onChanged: (value) {
+                            ref.read(currencyProvider.notifier).state = value;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+                Text('LOCAL DOCS', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')),
+                const SizedBox(height: 16),
+
+                _buildActionTile(
+                  label: 'PRIVACY POLICY',
+                  valueText: '[ REQ ]',
+                  borderColor: borderColor,
+                  textMain: textMain,
+                  onTap: () => _navigateToPage(
+                    context,
+                    SystemDocumentScreen(
+                      title: 'PRIVACY POLICY',
+                      content: '1. TELEMETRY SCOPE & ISOLATION\nAll operations, tracking parameters, liquid assets, and computational balance data are recorded exclusively inside isolated client environments. This application operates inside a completely decentralized sandbox. No external synchronization hooks exist to bridge your input data to a broader network.\n\n2. NETWORK DISCONNECT GUARANTEE\nThis architecture guarantees offline-first operational parameters. Your transaction history, subscription tokens, category limits, and goal trackers are never shared with developer endpoints, analytic channels, or third-party marketing services.\n\n3. RIGHT TO PURGE\nData sovereignty belongs to the active user. You hold explicit rights to force-wipe all matrices instantly. Standard uninstallation of the software package physically obliterates the core Hive database vectors, permanently erasing your operational imprint from the device memory blocks.',
+                      isDark: isDark,
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 32),
-              Text('// LOCAL_DOCS', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Courier')),
-              const SizedBox(height: 16),
-
-              _buildActionTile(
-                label: 'PRIVACY_POLICY',
-                valueText: '[ REQ ]',
-                borderColor: borderColor,
-                textMain: textMain,
-                onTap: () => _navigateToPage(
-                  context,
-                  SystemDocumentScreen(
-                    title: 'PRIVACY_POLICY',
-                    content: '1. TELEMETRY SCOPE\nAll operations, tracking parameters, assets, and computational balance data are recorded exclusively inside isolated client environments. No external synchronization hooks exist.\n\n2. NETWORK DISCONNECT\nThis architecture guarantees offline tracking parameters. No tracking data tokens, category configurations, or logs are shared with developer endpoints or third-party analytical channels.\n\n3. PURGE PRIVILEGES\nThe user holds explicit rights to force-wipe all data matrices instantly from the physical root directory using systemic clear codes.',
-                    isDark: isDark,
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              _buildActionTile(
-                label: 'DATA_SECURITY',
-                valueText: '[ REQ ]',
-                borderColor: borderColor,
-                textMain: textMain,
-                onTap: () => _navigateToPage(
-                  context,
-                  SystemDocumentScreen(
-                    title: 'DATA_SECURITY',
-                    content: '1. STORAGE LAYERS\nApplication vectors utilize memory-mapped file structures (Hive Boxes) positioned inside standard application directory bounds. Files are inaccessible to parallel installed system software packages.\n\n2. CRYPTO INTEGRITY\nData blocks remain unencrypted by default to minimize compute overhead during operational rendering. Physical platform protection (Device Passcode/Biometrics) serves as the primary barrier against visual data breach.\n\n3. INSTANCE INTEGRITY\nAny manipulation of internal file hashes or hardware-level storage corruptions resets internal matrices to zero parameters to ensure application structural stability.',
-                    isDark: isDark,
+                const SizedBox(height: 12),
+                _buildActionTile(
+                  label: 'DATA SECURITY',
+                  valueText: '[ REQ ]',
+                  borderColor: borderColor,
+                  textMain: textMain,
+                  onTap: () => _navigateToPage(
+                    context,
+                    SystemDocumentScreen(
+                      title: 'DATA SECURITY',
+                      content: '1. LOCAL STORAGE LAYERS\nApplication persistence vectors utilize memory-mapped file structures (Hive Data Boxes) positioned rigidly inside standard, OS-protected application directory bounds. These files are inaccessible to parallel installed system software packages or file explorers without root access.\n\n2. CRYPTOGRAPHIC INTEGRITY\nData blocks remain locally unencrypted by default to drastically minimize compute overhead during operational rendering, ensuring a perfectly smooth UI layer. Your physical platform protection parameters (Device PIN, Passcode, and Biometrics) serve as the impenetrable primary barrier against visual data breaches.\n\n3. CORRUPTION MITIGATION\nInternal matrix validations monitor hardware-level storage corruptions continuously. If system validation determines that the internal database file mapping has been manipulated, the engine will structurally hard-reset parameters to ensure the application maintains baseline stability and prevents calculation overflow.',
+                      isDark: isDark,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              _buildActionTile(
-                label: 'USER_GUIDE',
-                valueText: '[ REQ ]',
-                borderColor: borderColor,
-                textMain: textMain,
-                onTap: () => _navigateToPage(
-                  context,
-                  SystemDocumentScreen(
-                    title: 'USER_GUIDE',
-                    content: '1. MATRIX INITIALIZATION\nNavigate to the limits deck. Open configuration to initialize specific operational bounds. Enter category labels and fluid funding thresholds.\n\n2. LIQUIDITY MANAGEMENT\nAccess active liquidity asset decks. Append incoming resource transactions or record mandatory capital outflows. Tracking ledgers calculate margin statistics instantaneously.\n\n3. OVERRUN MITIGATION\nIf the computational outflow breaks configuration bounds, system components flag red alert warnings. Restructure capital vectors immediately.',
-                    isDark: isDark,
+                const SizedBox(height: 12),
+                _buildActionTile(
+                  label: 'USER GUIDE',
+                  valueText: '[ REQ ]',
+                  borderColor: borderColor,
+                  textMain: textMain,
+                  onTap: () => _navigateToPage(
+                    context,
+                    SystemDocumentScreen(
+                      title: 'USER GUIDE',
+                      content: '1. MATRIX INITIALIZATION & LIMITS\nBegin navigation via the MATRIX deck. Open configuration windows to initialize specific operational bounds. Enter standard category labels and inject fluid funding thresholds to establish your maximum spending allocations per cycle.\n\n2. LIQUIDITY MANAGEMENT\nAccess active liquidity via the LEDGER. First, append an incoming resource transaction (Monthly Income). You may then record mandatory capital outflows. Tracking engines will calculate margin statistics instantaneously against your configured categories.\n\n3. OVERRUN MITIGATION\nIf your computational outflow permanently breaks configuration bounds, matrix components will flag dynamic red alert warnings. Monitor your POOLS to restructure capital vectors efficiently, and clear unused passive drains in the SUBS section.',
+                      isDark: isDark,
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 32),
-              Text('// NETWORK_LINKS', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Courier')),
-              const SizedBox(height: 16),
+                const SizedBox(height: 32),
+                Text('NETWORK LINKS', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')),
+                const SizedBox(height: 16),
 
-              _buildActionTile(
-                label: 'WEB_TERMINAL',
-                valueText: '[ PING ]',
-                borderColor: borderColor,
-                textMain: textMain,
-                onTap: () => _showDevDialog(context, isDark),
-              ),
-              const SizedBox(height: 12),
-              _buildActionTile(
-                label: 'FEEDBACK_PING',
-                valueText: '[ PING ]',
-                borderColor: borderColor,
-                textMain: textMain,
-                onTap: () => _showDevDialog(context, isDark),
-              ),
-
-              const Spacer(),
-
-              // SYSTEM FOOTER BOUNDARY - MOVED TO CENTER & RENAMED
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(border: Border(top: BorderSide(color: borderColor, width: 0.8))),
-                child: Text(
-                  'BUILD BY DARSHSERAPHIC',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: textSub, fontSize: 10, letterSpacing: 0.5, fontWeight: FontWeight.bold, fontFamily: 'Courier'),
+                _buildActionTile(
+                  label: 'WEB TERMINAL',
+                  valueText: '[ PING ]',
+                  borderColor: borderColor,
+                  textMain: textMain,
+                  onTap: () => _showDevDialog(context, isDark),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                _buildActionTile(
+                  label: 'FEEDBACK PING',
+                  valueText: '[ PING ]',
+                  borderColor: borderColor,
+                  textMain: textMain,
+                  onTap: () => _showDevDialog(context, isDark),
+                ),
+
+                const Spacer(),
+
+                // SYSTEM FOOTER BOUNDARY (Line Removed)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'BUILT BY DARSHSERAPHIC',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: textSub, fontSize: 10, letterSpacing: 0.5, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -247,7 +277,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
         decoration: BoxDecoration(
           color: Colors.transparent,
           border: Border.all(color: borderColor, width: 0.8),
@@ -255,8 +285,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Courier')),
-            Text(valueText, style: TextStyle(color: textMain, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5, fontFamily: 'Courier')),
+            Text(label, style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter')),
+            Text(valueText, style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5, fontFamily: 'Inter')),
           ],
         ),
       ),
@@ -276,7 +306,6 @@ class SystemDocumentScreen extends StatelessWidget {
     required this.isDark,
   });
 
-  // Dynamically parses the raw config content to make headlines bold and body free-flowing
   Widget _buildParsedContent(String documentText, Color textMain, Color textSub) {
     final sections = documentText.split('\n\n');
     return Column(
@@ -289,7 +318,7 @@ class SystemDocumentScreen extends StatelessWidget {
         final bodyText = lines.skip(1).join('\n');
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 24.0),
+          padding: const EdgeInsets.only(bottom: 28.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -297,20 +326,20 @@ class SystemDocumentScreen extends StatelessWidget {
                 headline,
                 style: TextStyle(
                   color: textMain,
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Courier',
+                  fontFamily: 'Inter',
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 bodyText,
                 style: TextStyle(
                   color: textSub,
-                  fontSize: 11,
+                  fontSize: 13,
                   height: 1.6,
-                  fontFamily: 'Courier',
+                  fontFamily: 'Inter',
                   letterSpacing: 0.2,
                 ),
               ),
@@ -331,7 +360,7 @@ class SystemDocumentScreen extends StatelessWidget {
       backgroundColor: bgColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -342,20 +371,19 @@ class SystemDocumentScreen extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.keyboard_arrow_left, color: textSub, size: 16),
-                      const SizedBox(width: 2),
-                      Text('[ BACK ]', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5, fontFamily: 'Courier')),
+                      Icon(Icons.keyboard_arrow_left, color: textSub, size: 18),
+                      const SizedBox(width: 4),
+                      Text('[ BACK ]', style: TextStyle(color: textSub, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5, fontFamily: 'Inter')),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               Text(
-                '// $title',
-                style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Courier'),
+                title,
+                style: TextStyle(color: textMain, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter'),
               ),
-              const SizedBox(height: 24),
-              // FIX: Removed borders and boxes to make structural information flow free
+              const SizedBox(height: 32),
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),

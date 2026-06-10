@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/database.dart'; // Added to ensure database syncing works
+import '../../core/database.dart'; // Ensure database syncing works
 import 'settings.dart';
 
 class BudgetLimit {
@@ -67,7 +67,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
     // Reactive styles definition mapping perfectly synced with expense.dart
     final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
-    final textSub = isDark ? const Color(0xFFF5F3F4) : const Color(0xFF4A4A4A);
+    final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     const alertRed = Color(0xFFE63946);
 
     return Theme(
@@ -79,175 +79,190 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // CONFIGURATION ACTION BAR
-            Padding(
-              padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isConfigurationFormOpen = !_isConfigurationFormOpen;
-                      });
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // FIX: Standardized header styling to match other app tabs perfectly
-                        Text(
-                          'BUDGET_PANEL',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.0,
-                            fontFamily: 'Inter',
-                            color: textSub,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              _isConfigurationFormOpen ? '[ CLOSE ]' : '[ CONFIGURE ]',
-                              style: TextStyle(color: textMain, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(width: 4),
-                            AnimatedRotation(
-                              duration: const Duration(milliseconds: 200),
-                              turns: _isConfigurationFormOpen ? 0.25 : 0.0,
-                              child: Icon(Icons.keyboard_arrow_right, color: textSub, size: 14),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  AnimatedCrossFade(
-                    duration: const Duration(milliseconds: 250),
-                    sizeCurve: Curves.easeInOutCubic,
-                    firstCurve: Curves.easeInQuad,
-                    secondCurve: Curves.easeOutQuad,
-                    crossFadeState: _isConfigurationFormOpen
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
-                    firstChild: const SizedBox(width: double.infinity),
-                    secondChild: Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        border: Border.all(color: specBorderColor, width: 0.8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // CONFIGURATION ACTION BAR
+              Padding(
+                padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isConfigurationFormOpen = !_isConfigurationFormOpen;
+                        });
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          TextField(
-                            controller: _categoryController,
-                            style: TextStyle(color: textMain, fontSize: 14),
-                            decoration: InputDecoration(
-                              labelText: 'METRIC CATEGORY LABEL',
-                              labelStyle: TextStyle(color: textSub, fontSize: 11),
-                              isDense: true,
-                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                          Text(
+                            'BUDGET_PANEL',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                              fontFamily: 'Inter',
+                              color: textSub,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          TextField(
-                            controller: _allocationController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: TextStyle(color: textMain, fontSize: 14),
-                            decoration: InputDecoration(
-                              labelText: 'MAXIMUM LIQUIDITY LIMIT CAP',
-                              labelStyle: TextStyle(color: textSub, fontSize: 11),
-                              prefixText: '$currency ',
-                              prefixStyle: TextStyle(color: textMain, fontSize: 14),
-                              isDense: true,
-                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          InkWell(
-                            onTap: () async {
-                              final String category = _categoryController.text.trim().toUpperCase();
-                              final double? allocatedAmount = double.tryParse(_allocationController.text);
-
-                              if (category.isNotEmpty && allocatedAmount != null && allocatedAmount > 0) {
-                                final existingIndex = budgets.indexWhere((element) => element.category == category);
-                                List<BudgetLimit> updatedList;
-
-                                if (existingIndex != -1) {
-                                  final oldBudget = budgets[existingIndex];
-                                  updatedList = [...budgets];
-                                  updatedList[existingIndex] = BudgetLimit(
-                                    category: category,
-                                    allocated: allocatedAmount,
-                                    currentOutflow: oldBudget.currentOutflow,
-                                  );
-                                } else {
-                                  updatedList = [
-                                    ...budgets,
-                                    BudgetLimit(category: category, allocated: allocatedAmount, currentOutflow: 0.0),
-                                  ];
-                                }
-
-                                // Update Riverpod State
-                                ref.read(budgetPlannerProvider.notifier).state = updatedList;
-
-                                // FIX: Save new entry to persistent Hive storage
-                                await ExomicDatabaseEngine.budgetBox.clear();
-                                for (var limit in updatedList) {
-                                  await ExomicDatabaseEngine.budgetBox.add(BudgetLimitModel(
-                                    category: limit.category,
-                                    allocated: limit.allocated,
-                                    currentOutflow: limit.currentOutflow,
-                                  ));
-                                }
-
-                                _categoryController.clear();
-                                _allocationController.clear();
-                                setState(() {
-                                  _isConfigurationFormOpen = false;
-                                });
-                                FocusScope.of(context).unfocus();
-                              }
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              color: textMain,
-                              alignment: Alignment.center,
-                              child: Text(
-                                'INITIALIZE OPERATIONAL CAP',
-                                style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                          Row(
+                            children: [
+                              Text(
+                                _isConfigurationFormOpen ? '[ CLOSE ]' : '[ CONFIGURE ]',
+                                style: TextStyle(color: textMain, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
                               ),
-                            ),
+                              const SizedBox(width: 4),
+                              AnimatedRotation(
+                                duration: const Duration(milliseconds: 200),
+                                turns: _isConfigurationFormOpen ? 0.25 : 0.0,
+                                child: Icon(Icons.keyboard_arrow_right, color: textSub, size: 14),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 250),
+                      sizeCurve: Curves.easeInOutCubic,
+                      firstCurve: Curves.easeInQuad,
+                      secondCurve: Curves.easeOutQuad,
+                      crossFadeState: _isConfigurationFormOpen
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      firstChild: const SizedBox(width: double.infinity),
+                      secondChild: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          border: Border.all(color: specBorderColor, width: 0.8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _categoryController,
+                              style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                              decoration: InputDecoration(
+                                labelText: 'METRIC CATEGORY LABEL',
+                                labelStyle: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
+                                isDense: true,
+                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _allocationController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                              decoration: InputDecoration(
+                                labelText: 'MAXIMUM LIQUIDITY LIMIT CAP',
+                                labelStyle: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
+                                prefixText: '$currency ',
+                                prefixStyle: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                                isDense: true,
+                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            InkWell(
+                              onTap: () async {
+                                final String category = _categoryController.text.trim().toUpperCase();
+                                final double? allocatedAmount = double.tryParse(_allocationController.text);
+
+                                if (category.isNotEmpty && allocatedAmount != null && allocatedAmount > 0) {
+                                  final existingIndex = budgets.indexWhere((element) => element.category == category);
+                                  List<BudgetLimit> updatedList;
+
+                                  if (existingIndex != -1) {
+                                    final oldBudget = budgets[existingIndex];
+                                    updatedList = [...budgets];
+                                    updatedList[existingIndex] = BudgetLimit(
+                                      category: category,
+                                      allocated: allocatedAmount,
+                                      currentOutflow: oldBudget.currentOutflow,
+                                    );
+                                  } else {
+                                    updatedList = [
+                                      ...budgets,
+                                      BudgetLimit(category: category, allocated: allocatedAmount, currentOutflow: 0.0),
+                                    ];
+                                  }
+
+                                  // Update Riverpod State
+                                  ref.read(budgetPlannerProvider.notifier).state = updatedList;
+
+                                  // Save new entry to persistent Hive storage
+                                  await ExomicDatabaseEngine.budgetBox.clear();
+                                  for (var limit in updatedList) {
+                                    await ExomicDatabaseEngine.budgetBox.add(BudgetLimitModel(
+                                      category: limit.category,
+                                      allocated: limit.allocated,
+                                      currentOutflow: limit.currentOutflow,
+                                    ));
+                                  }
+
+                                  _categoryController.clear();
+                                  _allocationController.clear();
+                                  setState(() {
+                                    _isConfigurationFormOpen = false;
+                                  });
+                                  FocusScope.of(context).unfocus();
+                                }
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                color: textMain,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'INITIALIZE OPERATIONAL CAP',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.black : Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Divider(color: specBorderColor, height: 1),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Divider(color: specBorderColor, height: 1),
+              ),
 
-            // DATA MATRIX LISTVIEW (MODERN CARD VIEW - NO OVERFLOW)
-            Expanded(
-              child: budgets.isEmpty
-                  ? Center(child: Text('NO ACTIVE BOUNDARIES SET', style: TextStyle(color: textSub, fontSize: 12)))
+              // DATA MATRIX LISTVIEW (MODERN CARD VIEW - NO OVERFLOW)
+              budgets.isEmpty
+                  ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text(
+                    'NO ACTIVE BOUNDARIES SET',
+                    style: TextStyle(color: textSub, fontSize: 12, fontFamily: 'Inter'),
+                  ),
+                ),
+              )
                   : ListView.builder(
-                physics: const ClampingScrollPhysics(),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                 itemCount: budgets.length,
                 itemBuilder: (context, index) {
@@ -285,7 +300,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                   // Update Riverpod State
                                   ref.read(budgetPlannerProvider.notifier).state = updatedList;
 
-                                  // FIX: Handle Hive Database Deletion successfully
+                                  // Handle Hive Database Deletion successfully
                                   await ExomicDatabaseEngine.budgetBox.clear();
                                   for (var b in updatedList) {
                                     await ExomicDatabaseEngine.budgetBox.add(BudgetLimitModel(
@@ -299,7 +314,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                   limit.category,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: labelColor, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.2),
+                                  style: TextStyle(color: labelColor, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter'),
                                 ),
                               ),
                             ),
@@ -310,6 +325,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                 color: isBreached ? alertRed : (isDark ? const Color(0xFF4BB543) : const Color(0xFF2E7D32)),
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
+                                fontFamily: 'Inter',
                               ),
                             ),
                           ],
@@ -324,11 +340,11 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('LIMIT', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold)),
+                                  Text('LIMIT', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
                                   const SizedBox(height: 2),
                                   Text(
                                     '$currency${limit.allocated.toStringAsFixed(0)}',
-                                    style: TextStyle(color: textMain, fontSize: 13),
+                                    style: TextStyle(color: textMain, fontSize: 13, fontFamily: 'Inter'),
                                   ),
                                 ],
                               ),
@@ -338,11 +354,11 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('OUTFLOW', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold)),
+                                  Text('OUTFLOW', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
                                   const SizedBox(height: 2),
                                   Text(
                                     '$currency${limit.currentOutflow.toStringAsFixed(2)}',
-                                    style: TextStyle(color: textMain, fontSize: 13),
+                                    style: TextStyle(color: textMain, fontSize: 13, fontFamily: 'Inter'),
                                   ),
                                 ],
                               ),
@@ -352,13 +368,13 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Text('MARGIN', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold)),
+                                  Text('MARGIN', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
                                   const SizedBox(height: 2),
                                   Text(
                                     isBreached
                                         ? '-$currency${margin.abs().toStringAsFixed(2)}'
                                         : '$currency${margin.toStringAsFixed(2)}',
-                                    style: TextStyle(color: labelColor, fontSize: 13, fontWeight: FontWeight.bold),
+                                    style: TextStyle(color: labelColor, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
                                   ),
                                 ],
                               ),
@@ -370,8 +386,8 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                   );
                 },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
