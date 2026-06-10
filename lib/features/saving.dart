@@ -300,20 +300,20 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                         _isConfigurationFormOpen = !_isConfigurationFormOpen;
                       });
                     },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Row( // <--- Changed parent to Row for side-by-side layout
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween, // <--- Pushes title left, button right
                       children: [
                         Text(
-                          'POOL TARGETS',
+                          'SAVINGS',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.0,
                             fontFamily: 'Inter',
-                            color: textSub,
+                            color: textMain,
                           ),
                         ),
-                        Row(
+                        Row( // <--- Keeps button elements grouped together on the right side
                           children: [
                             Text(
                               _isConfigurationFormOpen ? '[ CLOSE ]' : '[ CONFIGURE ]',

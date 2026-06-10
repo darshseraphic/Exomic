@@ -122,14 +122,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Scaffold(
         backgroundColor: screenBg,
         body: SafeArea(
+          // ... inside your _SettingsScreenState build method
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('SETTINGS', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')),
+                Text('SETTINGS', style: TextStyle(color: textMain, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')), // <--- Updated to dynamic white/black textMain
                 const SizedBox(height: 24),
-
                 // THEME INTERFACE RULE (WITH PERSISTENT MUTATION)
                 _buildActionTile(
                   label: 'UI THEME MODE',

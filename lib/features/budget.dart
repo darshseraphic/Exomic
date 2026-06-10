@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database.dart'; // Ensure database syncing works
 import 'settings.dart';
+import 'expense.dart'; // IMPORTED: Access incomeProvider
+import 'subscription.dart'; // IMPORTED: Access subscriptionProvider
+import 'saving.dart'; // IMPORTED: Access savingsProvider
 
 class BudgetLimit {
   final String category;
@@ -45,20 +48,51 @@ class BudgetPlannerScreen extends ConsumerStatefulWidget {
 }
 
 class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
-  final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _allocationController = TextEditingController();
   bool _isConfigurationFormOpen = false;
 
+  // DROPDOWN ADAPTATION: Category selection states perfectly synced with expense.dart
+  String _selectedCategory = 'INFRASTRUCTURE';
+  bool _isCategoryDropdownOpen = false;
+  final List<String> _categories = ['INFRASTRUCTURE', 'HARDWARE', 'OPERATIONS', 'LIFESTYLE'];
+
   @override
   void dispose() {
-    _categoryController.dispose();
     _allocationController.dispose();
     super.dispose();
+  }
+
+  // UNIFIED SUMMARY ROW COMPONENT: Uses matching style properties for maximum readability
+  Widget _buildSummaryRow(String label, String value, TextStyle unifiedStyle, {bool isSavings = false, double dailyPace = 0.0, String currency = '\$'}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: unifiedStyle),
+            if (isSavings) ...[
+              const SizedBox(height: 4),
+              Text(
+                'DAILY TARGET PACE: $currency${dailyPace.toStringAsFixed(2)}',
+                style: TextStyle(color: unifiedStyle.color?.withOpacity(0.5), fontSize: 10, fontFamily: 'Inter', fontWeight: FontWeight.bold),
+              ),
+            ]
+          ],
+        ),
+        Text(value, style: unifiedStyle.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final budgets = ref.watch(budgetPlannerProvider);
+
+    // DYNAMIC METRIC STREAM INGESTION
+    final originalIncome = ref.watch(incomeProvider);
+    final subscriptions = ref.watch(subscriptionProvider);
+    final savingsGoals = ref.watch(savingsProvider);
 
     // Direct observations to achieve instantaneous theme and currency updates
     final isDark = ref.watch(settingsThemeModeProvider);
@@ -69,6 +103,17 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     const alertRed = Color(0xFFE63946);
+
+    // UNIFIED READABILITY TEXT STYLE: Matches the "MAXIMUM LIQUIDITY LIMIT CAP" text style
+    final readableRowStyle = TextStyle(color: textMain, fontSize: 12, fontFamily: 'Inter');
+
+    // UNASSIGNED LIQUIDITY EQUATION ALGORITHM
+    double totalSubscriptions = subscriptions.fold(0.0, (sum, sub) => sum + (sub.isActive ? sub.cost : 0.0));
+    double totalSavingsDailyPace = savingsGoals.fold(0.0, (sum, goal) => sum + goal.dailyPaceRequired);
+    double totalSavingsMonthlyPace = totalSavingsDailyPace * 30; // Monthly pace projection
+    double totalBudgetsAllocated = budgets.fold(0.0, (sum, b) => sum + b.allocated);
+
+    double unassignedLiquidity = originalIncome - totalSubscriptions - totalSavingsMonthlyPace - totalBudgetsAllocated;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -100,14 +145,15 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          // UPDATED: Renamed to "BUDGET" and changed color to primary white (textMain)
                           Text(
-                            'BUDGET_PANEL',
+                            'BUDGET',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.0,
                               fontFamily: 'Inter',
-                              color: textSub,
+                              color: textMain,
                             ),
                           ),
                           Row(
@@ -147,22 +193,100 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextField(
-                              controller: _categoryController,
-                              style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
-                              decoration: InputDecoration(
-                                labelText: 'METRIC CATEGORY LABEL',
-                                labelStyle: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
-                                isDense: true,
-                                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                            // ADJUSTABLE DROPDOWN SELECTION COMPONENT (Sourced from expense.dart)
+                            Text(
+                              'METRIC CATEGORY LABEL',
+                              style: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
+                            ),
+                            const SizedBox(height: 4),
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _isCategoryDropdownOpen = !_isCategoryDropdownOpen;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                                decoration: BoxDecoration(
+                                  border: Border(bottom: BorderSide(color: specBorderColor)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _selectedCategory,
+                                      style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter', fontWeight: FontWeight.bold),
+                                    ),
+                                    AnimatedRotation(
+                                      duration: const Duration(milliseconds: 250),
+                                      turns: _isCategoryDropdownOpen ? 0.5 : 0.0,
+                                      child: Icon(
+                                        Icons.keyboard_arrow_down,
+                                        color: textSub,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.fastOutSlowIn,
+                              alignment: Alignment.topCenter,
+                              child: _isCategoryDropdownOpen
+                                  ? Container(
+                                margin: const EdgeInsets.only(top: 4),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    left: BorderSide(color: specBorderColor, width: 0.8),
+                                    right: BorderSide(color: specBorderColor, width: 0.8),
+                                    bottom: BorderSide(color: specBorderColor, width: 0.8),
+                                  ),
+                                  color: Colors.transparent,
+                                ),
+                                child: Column(
+                                  children: _categories.map((category) {
+                                    final isSelected = category == _selectedCategory;
+                                    return InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedCategory = category;
+                                          _isCategoryDropdownOpen = false;
+                                        });
+                                      },
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 200),
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                        color: isSelected ? textMain.withOpacity(0.05) : Colors.transparent,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              category,
+                                              style: TextStyle(
+                                                color: isSelected ? textMain : textSub,
+                                                fontSize: 12,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                fontFamily: 'Inter',
+                                              ),
+                                            ),
+                                            if (isSelected) Icon(Icons.check, color: textMain, size: 14),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              )
+                                  : const SizedBox(width: double.infinity),
+                            ),
+                            const SizedBox(height: 20),
                             TextField(
                               controller: _allocationController,
                               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                              style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                              style: readableRowStyle, // Uses easy to read style
                               decoration: InputDecoration(
                                 labelText: 'MAXIMUM LIQUIDITY LIMIT CAP',
                                 labelStyle: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
@@ -176,10 +300,10 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                             const SizedBox(height: 24),
                             InkWell(
                               onTap: () async {
-                                final String category = _categoryController.text.trim().toUpperCase();
+                                final String category = _selectedCategory;
                                 final double? allocatedAmount = double.tryParse(_allocationController.text);
 
-                                if (category.isNotEmpty && allocatedAmount != null && allocatedAmount > 0) {
+                                if (allocatedAmount != null && allocatedAmount > 0) {
                                   final existingIndex = budgets.indexWhere((element) => element.category == category);
                                   List<BudgetLimit> updatedList;
 
@@ -211,7 +335,6 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                     ));
                                   }
 
-                                  _categoryController.clear();
                                   _allocationController.clear();
                                   setState(() {
                                     _isConfigurationFormOpen = false;
@@ -241,6 +364,55 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+
+              // UNASSIGNED LIQUIDITY ANALYSIS DASHBOARD
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: unassignedLiquidity < 0 ? alertRed.withOpacity(isDark ? 0.08 : 0.04) : Colors.transparent,
+                    border: Border.all(
+                      color: unassignedLiquidity < 0 ? alertRed.withOpacity(0.4) : specBorderColor,
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'UNASSIGNED LIQUIDITY METRIC',
+                        style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5, fontFamily: 'Inter'),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        unassignedLiquidity < 0
+                            ? '-$currency${unassignedLiquidity.abs().toStringAsFixed(2)}'
+                            : '$currency${unassignedLiquidity.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: unassignedLiquidity < 0 ? alertRed : textMain,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'Inter',
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Divider(color: specBorderColor, height: 1),
+                      const SizedBox(height: 14),
+
+                      // UPDATED: All summary rows now match the readable text configuration style perfectly
+                      _buildSummaryRow('TOTAL CASH INCOME Stream', '+$currency${originalIncome.toStringAsFixed(2)}', readableRowStyle),
+                      const SizedBox(height: 10),
+                      _buildSummaryRow('ACTIVE UTILITY SUBSCRIPTIONS', '-$currency${totalSubscriptions.toStringAsFixed(2)}', readableRowStyle),
+                      const SizedBox(height: 10),
+                      _buildSummaryRow('POOL RESERVES SEGREGATION (MO)', '-$currency${totalSavingsMonthlyPace.toStringAsFixed(2)}', readableRowStyle, isSavings: true, dailyPace: totalSavingsDailyPace, currency: currency),
+                      const SizedBox(height: 10),
+                      _buildSummaryRow('ALLOCATED BOUNDARY CAPS', '-$currency${totalBudgetsAllocated.toStringAsFixed(2)}', readableRowStyle),
+                    ],
+                  ),
                 ),
               ),
 
@@ -288,7 +460,6 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header block: Title and Operational Status Tag
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -331,8 +502,6 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                           ],
                         ),
                         const SizedBox(height: 14),
-
-                        // Metric grid block: Distributed proportionally to ensure text space
                         Row(
                           children: [
                             Expanded(
