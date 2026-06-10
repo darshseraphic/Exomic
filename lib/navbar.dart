@@ -17,8 +17,8 @@ class ExomicNavbarShell extends ConsumerWidget {
     final currentTab = ref.watch(navigationIndexProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Strict alignment with primary application theme canvas layers
-    const specBorderColor = Color(0xFF191919);
+    // FIX: Make this dynamic so it adapts perfectly to both light and dark themes
+    final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final activeColor = isDark ? Colors.white : Colors.black;
     final inactiveColor = isDark ? const Color(0xFF4A4A4A) : const Color(0xFFB5B5B5);
     // Synced perfectly to match your exact scaffold background specifications
@@ -34,7 +34,8 @@ class ExomicNavbarShell extends ConsumerWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      // FIX: Changed from Colors.transparent to inherit the theme's background color
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(
         index: currentTab,
         children: mobileViewports,
@@ -42,7 +43,7 @@ class ExomicNavbarShell extends ConsumerWidget {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: barBackgroundColor,
-          border: const Border(
+          border: Border( // Removed const since specBorderColor is now dynamic
             top: BorderSide(color: specBorderColor, width: 0.8),
           ),
         ),

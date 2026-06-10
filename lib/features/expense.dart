@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database.dart';
+import 'settings.dart'; // Import to link with global settings state triggers
 
-class AnimatedRollingCounter extends StatefulWidget {
+class AnimatedRollingCounter extends ConsumerStatefulWidget {
   final double value;
   final TextStyle style;
   const AnimatedRollingCounter({super.key, required this.value, required this.style});
 
   @override
-  State<AnimatedRollingCounter> createState() => _AnimatedRollingCounterState();
+  ConsumerState<AnimatedRollingCounter> createState() => _AnimatedRollingCounterState();
 }
 
-class _AnimatedRollingCounterState extends State<AnimatedRollingCounter> with SingleTickerProviderStateMixin {
+class _AnimatedRollingCounterState extends ConsumerState<AnimatedRollingCounter> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Tween<double> _tween;
   late Animation<double> _animation;
@@ -46,10 +47,11 @@ class _AnimatedRollingCounterState extends State<AnimatedRollingCounter> with Si
 
   @override
   Widget build(BuildContext context) {
+    final currency = ref.watch(currencyProvider);
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        return Text('\$${_animation.value.toStringAsFixed(2)}', style: widget.style);
+        return Text('$currency${_animation.value.toStringAsFixed(2)}', style: widget.style);
       },
     );
   }
@@ -119,17 +121,20 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
   Widget build(BuildContext context) {
     final originalIncome = ref.watch(incomeProvider);
     final history = ref.watch(ledgerStreamProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    const specBorderColor = Color(0xFF191919);
+    // Direct observations to achieve instantaneous theme and currency updates
+    final isDark = ref.watch(settingsThemeModeProvider);
+    final currency = ref.watch(currencyProvider);
+
+    final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
     final systemTextColor = isDark ? const Color(0xFFF5F3F4) : const Color(0xFF4A4A4A);
 
-    // FIXED: Calculate current month token signature
+    // Calculate current month token signature
     final DateTime nowTime = DateTime.now();
     final String currentMonthSignature = "${nowTime.year}-${nowTime.month.toString().padLeft(2, '0')}";
 
-    // FIXED: Only compute dynamic deductions if the item falls within the active current month
+    // Only compute dynamic deductions if the item falls within the active current month
     double currentMonthDeductions = history.where((item) {
       if (item.timestamp.contains('/')) {
         return item.timestamp.startsWith(currentMonthSignature);
@@ -179,11 +184,11 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                             decoration: InputDecoration(
                               hintText: '0.00',
                               hintStyle: TextStyle(color: systemTextColor.withOpacity(0.3)),
-                              prefixText: '\$ ',
+                              prefixText: '$currency ',
                               prefixStyle: TextStyle(color: textMain, fontSize: 18, fontWeight: FontWeight.normal),
                               isDense: true,
                               contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                              enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                               focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                             ),
                           ),
@@ -234,10 +239,10 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                         decoration: InputDecoration(
                           labelText: 'AMOUNT',
                           labelStyle: TextStyle(color: systemTextColor, fontSize: 12),
-                          prefixText: '\$ ',
+                          prefixText: '$currency ',
                           prefixStyle: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.normal),
                           isDense: true,
-                          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                           focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                         ),
                       ),
@@ -249,7 +254,7 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                           labelText: 'DESCRIPTION',
                           labelStyle: TextStyle(color: systemTextColor, fontSize: 12),
                           isDense: true,
-                          enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                           focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                         ),
                       ),
@@ -295,7 +300,7 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                             child: _isCategoryDropdownOpen
                                 ? Container(
                               margin: const EdgeInsets.only(top: 4),
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 border: Border(
                                   left: BorderSide(color: specBorderColor, width: 0.8),
                                   right: BorderSide(color: specBorderColor, width: 0.8),
@@ -343,7 +348,6 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                           String desc = _descController.text.trim();
                           if (amt > 0 && desc.isNotEmpty) {
                             final now = DateTime.now();
-                            // FIXED: Prepended the year-month pattern into the unique signature string format
                             final timeStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
                             final updatedItem = ExpenseItem(
@@ -357,7 +361,6 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                             final newList = [updatedItem, ...currentList];
 
                             ref.read(ledgerStreamProvider.notifier).state = newList;
-                            // FIXED: Awaiting dynamic serialization routines smoothly to physical boxes
                             await ExomicDatabaseEngine.saveHistory(newList.map((e) => e.toMap()).toList());
 
                             _amountController.clear();
@@ -404,11 +407,10 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                 itemCount: history.length,
                 itemBuilder: (context, index) {
                   final item = history[index];
-                  // Displays the localized time segment cleanly inside the ledger lists view port
                   final displayTime = item.timestamp.contains(' ') ? item.timestamp.split(' ')[1] : item.timestamp;
                   return Container(
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-                    decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: specBorderColor, width: 0.5))),
+                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: specBorderColor, width: 0.5))),
                     child: Row(
                       children: [
                         Text('[$displayTime]', style: TextStyle(color: systemTextColor, fontSize: 12)),
@@ -423,7 +425,7 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                             ],
                           ),
                         ),
-                        Text('-\$${item.amount.toStringAsFixed(2)}', style: TextStyle(color: textMain, fontSize: 15, fontWeight: FontWeight.bold)),
+                        Text('-$currency${item.amount.toStringAsFixed(2)}', style: TextStyle(color: textMain, fontSize: 15, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   );
