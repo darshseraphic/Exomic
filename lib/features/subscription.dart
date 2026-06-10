@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database.dart';
+import 'settings.dart'; // Import to link with global settings state triggers
 
 class SubscriptionItem {
   final String id;
@@ -68,29 +69,29 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       colorScheme: const ColorScheme.dark(
         primary: Colors.white,
         onPrimary: Colors.black,
-        surface: Color(0xFF0A0A0A),
+        surface: const Color(0xFF0A0A0A),
         onSurface: Colors.white,
       ),
       dialogBackgroundColor: const Color(0xFF050505),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 12),
+          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
           foregroundColor: Colors.white,
         ),
       ),
     )
         : ThemeData.light().copyWith(
-      scaffoldBackgroundColor: const Color(0xFFF9F9F9),
+      scaffoldBackgroundColor: const Color(0xFFFAFAFA),
       colorScheme: const ColorScheme.light(
         primary: Colors.black,
         onPrimary: Colors.white,
-        surface: Color(0xFFF5F5F5),
+        surface: const Color(0xFFF5F5F5),
         onSurface: Colors.black,
       ),
-      dialogBackgroundColor: const Color(0xFFF9F9F9),
+      dialogBackgroundColor: const Color(0xFFFAFAFA),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 12),
+          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
           foregroundColor: Colors.black,
         ),
       ),
@@ -119,9 +120,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   @override
   Widget build(BuildContext context) {
     final subsList = ref.watch(subscriptionProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    const specBorderColor = Color(0xFF191919);
+    // Direct state monitoring to prevent runtime frame lag drops
+    final isDark = ref.watch(settingsThemeModeProvider);
+    final currency = ref.watch(currencyProvider);
+
+    final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFFF5F3F4) : const Color(0xFF4A4A4A);
     const alertRed = Color(0xFFE63946);
@@ -165,7 +169,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                             labelText: 'SUBSCRIPTION NAME',
                             labelStyle: TextStyle(color: textSub, fontSize: 11),
                             isDense: true,
-                            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                             focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                           ),
                         ),
@@ -177,16 +181,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           decoration: InputDecoration(
                             labelText: 'MONTHLY OUTFLOW AMOUNT',
                             labelStyle: TextStyle(color: textSub, fontSize: 11),
-                            prefixText: '\$ ',
+                            prefixText: '$currency ',
                             prefixStyle: TextStyle(color: textMain, fontSize: 14),
                             isDense: true,
-                            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                             focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                           ),
                         ),
                         const SizedBox(height: 24),
 
-                        // REDESIGNED minimalist calendar interface component
+                        // Minimalist calendar interface component
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -196,7 +200,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                               onTap: () => _pickRenewalDate(context, textMain, isDark),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   border: Border(bottom: BorderSide(color: specBorderColor, width: 1.0)),
                                 ),
                                 child: Row(
@@ -328,7 +332,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '\$${sub.cost.toStringAsFixed(2)}',
+                              '$currency${sub.cost.toStringAsFixed(2)}',
                               style: TextStyle(color: textMain, fontSize: 16, fontWeight: FontWeight.w900),
                             ),
                             const SizedBox(height: 4),
