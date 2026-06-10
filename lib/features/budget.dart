@@ -52,9 +52,21 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
   bool _isConfigurationFormOpen = false;
 
   // DROPDOWN ADAPTATION: Category selection states perfectly synced with expense.dart
-  String _selectedCategory = 'INFRASTRUCTURE';
+  // Reset the default initial selection to match the new list
+  String _selectedCategory = 'HOUSING';
   bool _isCategoryDropdownOpen = false;
-  final List<String> _categories = ['INFRASTRUCTURE', 'HARDWARE', 'OPERATIONS', 'LIFESTYLE'];
+
+  // Real-world foundational essential categories
+  final List<String> _categories = [
+    'HOUSING',       // Rent, mortgage, insurance
+    'UTILITIES',     // Electricity, water, internet, phone
+    'GROCERIES',     // Food and household supplies
+    'TRANSPORT',     // Fuel, public transit, car maintenance
+    'HEALTHCARE',    // Medical expenses, prescriptions, health insurance
+    'SAVINGS',       // Emergency funds and investments
+    'PERSONAL',      // Clothing, personal care, daily sundries
+    'MISC'           // Unexpected or one-off essential costs
+  ];
 
   @override
   void dispose() {
