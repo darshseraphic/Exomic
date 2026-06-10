@@ -9,7 +9,7 @@ class SavingGoal {
   final double current;
   final String deadline;
   final double dailyPaceRequired;
-  final List<String> history; // Telemetry log array for incremental deposits
+  final List<String> history;
 
   const SavingGoal({
     required this.id,
@@ -59,7 +59,6 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
   final TextEditingController _targetController = TextEditingController();
   final TextEditingController _currentController = TextEditingController();
 
-  // Trackers for dynamic inline deposit actions
   String? _selectedPoolIdForDeposit;
   final TextEditingController _depositController = TextEditingController();
 
@@ -357,10 +356,15 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                 },
                                 child: Row(
                                   children: [
-                                    Icon(
-                                      isExpandedForDeposit ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right,
-                                      color: textFootnote,
-                                      size: 16,
+                                    // Smooth rotation toggle on the stateful indicators
+                                    AnimatedRotation(
+                                      duration: const Duration(milliseconds: 200),
+                                      turns: isExpandedForDeposit ? 0.25 : 0.0,
+                                      child: Icon(
+                                        Icons.keyboard_arrow_right,
+                                        color: textFootnote,
+                                        size: 16,
+                                      ),
                                     ),
                                     const SizedBox(width: 4),
                                     Expanded(
@@ -446,115 +450,128 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                           ],
                         ),
 
-                        if (isExpandedForDeposit) ...[
-                          const SizedBox(height: 16),
-                          const Divider(color: specBorderColor, height: 1, thickness: 0.5),
-                          const SizedBox(height: 12),
-                          Row(
+                        // FIXED: Replaced raw array spread tracking block with a fluid CrossFade wrapper layout
+                        AnimatedCrossFade(
+                          duration: const Duration(milliseconds: 250),
+                          sizeCurve: Curves.easeInOutCubic,
+                          firstCurve: Curves.easeInQuad,
+                          secondCurve: Curves.easeOutQuad,
+                          crossFadeState: isExpandedForDeposit
+                              ? CrossFadeState.showSecond
+                              : CrossFadeState.showFirst,
+                          firstChild: const SizedBox(width: double.infinity),
+                          secondChild: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _depositController,
-                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                  style: TextStyle(color: textMain, fontSize: 12),
-                                  decoration: InputDecoration(
-                                    labelText: 'APPEND LIQUIDITY INBOUND',
-                                    labelStyle: TextStyle(color: textFootnote, fontSize: 9),
-                                    prefixText: '\$ ',
-                                    prefixStyle: TextStyle(color: textMain, fontSize: 12),
-                                    isDense: true,
-                                    enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                              const SizedBox(height: 16),
+                              const Divider(color: specBorderColor, height: 1, thickness: 0.5),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _depositController,
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      style: TextStyle(color: textMain, fontSize: 12),
+                                      decoration: InputDecoration(
+                                        labelText: 'APPEND LIQUIDITY INBOUND',
+                                        labelStyle: TextStyle(color: textFootnote, fontSize: 9),
+                                        prefixText: '\$ ',
+                                        prefixStyle: TextStyle(color: textMain, fontSize: 12),
+                                        isDense: true,
+                                        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  InkWell(
+                                    onTap: () async {
+                                      final double? depositAmount = double.tryParse(_depositController.text);
+                                      if (depositAmount != null && depositAmount > 0) {
+                                        final double updatedCurrent = goal.current + depositAmount;
+
+                                        final today = DateTime.now();
+                                        DateTime parsedDead;
+                                        try {
+                                          final components = goal.deadline.split('-');
+                                          parsedDead = DateTime(int.parse(components[0]), int.parse(components[1]), int.parse(components[2]));
+                                        } catch (_) {
+                                          parsedDead = today.add(const Duration(days: 30));
+                                        }
+                                        final difference = parsedDead.difference(today).inDays;
+                                        final remainingDays = difference <= 0 ? 1 : difference;
+
+                                        final double balanceNeeded = goal.target - updatedCurrent;
+                                        final double updatedPace = balanceNeeded <= 0 ? 0.0 : (balanceNeeded / remainingDays);
+
+                                        final String timestampStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+                                        final List<String> updatedHistory = [
+                                          ...goal.history,
+                                          '[$timestampStr] REALLOCATED: +\$${depositAmount.toStringAsFixed(2)}'
+                                        ];
+
+                                        final updatedGoal = SavingGoal(
+                                          id: goal.id,
+                                          title: goal.title,
+                                          target: goal.target,
+                                          current: updatedCurrent,
+                                          deadline: goal.deadline,
+                                          dailyPaceRequired: updatedPace,
+                                          history: updatedHistory,
+                                        );
+
+                                        final updatedList = goalsList.map((g) => g.id == goal.id ? updatedGoal : g).toList();
+                                        ref.read(savingGoalsProvider.notifier).state = updatedList;
+                                        await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
+
+                                        _depositController.clear();
+                                        FocusScope.of(context).unfocus();
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      color: textMain,
+                                      child: Text(
+                                        'DEPOSIT',
+                                        style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (goal.history.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Text('POOL TELEMETRY HISTORY:', style: TextStyle(color: textFootnote, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                                const SizedBox(height: 6),
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxHeight: 70),
+                                  child: Container(
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF020202) : const Color(0xFFFAF9FA),
+                                      border: Border.all(color: specBorderColor, width: 0.5),
+                                    ),
+                                    child: ListView.builder(
+                                      shrinkWrap: true,
+                                      padding: const EdgeInsets.all(6),
+                                      itemCount: goal.history.length,
+                                      itemBuilder: (context, hIndex) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 4.0),
+                                          child: Text(
+                                            goal.history[hIndex],
+                                            style: TextStyle(color: accentGreen, fontFamily: 'Courier', fontSize: 9, fontWeight: FontWeight.bold),
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              InkWell(
-                                onTap: () async {
-                                  final double? depositAmount = double.tryParse(_depositController.text);
-                                  if (depositAmount != null && depositAmount > 0) {
-                                    final double updatedCurrent = goal.current + depositAmount;
-
-                                    final today = DateTime.now();
-                                    DateTime parsedDead;
-                                    try {
-                                      final components = goal.deadline.split('-');
-                                      parsedDead = DateTime(int.parse(components[0]), int.parse(components[1]), int.parse(components[2]));
-                                    } catch (_) {
-                                      parsedDead = today.add(const Duration(days: 30));
-                                    }
-                                    final difference = parsedDead.difference(today).inDays;
-                                    final remainingDays = difference <= 0 ? 1 : difference;
-
-                                    final double balanceNeeded = goal.target - updatedCurrent;
-                                    final double updatedPace = balanceNeeded <= 0 ? 0.0 : (balanceNeeded / remainingDays);
-
-                                    final String timestampStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-                                    final List<String> updatedHistory = [
-                                      ...goal.history,
-                                      '[$timestampStr] REALLOCATED: +\$${depositAmount.toStringAsFixed(2)}'
-                                    ];
-
-                                    final updatedGoal = SavingGoal(
-                                      id: goal.id,
-                                      title: goal.title,
-                                      target: goal.target,
-                                      current: updatedCurrent,
-                                      deadline: goal.deadline,
-                                      dailyPaceRequired: updatedPace,
-                                      history: updatedHistory,
-                                    );
-
-                                    final updatedList = goalsList.map((g) => g.id == goal.id ? updatedGoal : g).toList();
-                                    ref.read(savingGoalsProvider.notifier).state = updatedList;
-                                    await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
-
-                                    _depositController.clear();
-                                    FocusScope.of(context).unfocus();
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  color: textMain,
-                                  child: Text(
-                                    'DEPOSIT',
-                                    style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
+                              ]
                             ],
                           ),
-                          if (goal.history.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            Text('POOL TELEMETRY HISTORY:', style: TextStyle(color: textFootnote, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-                            const SizedBox(height: 6),
-                            // FIXED: Swapped out raw container parameter for a standard ConstrainedBox configuration
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 70),
-                              child: Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF020202) : const Color(0xFFFAF9FA),
-                                  border: Border.all(color: specBorderColor, width: 0.5),
-                                ),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  padding: const EdgeInsets.all(6),
-                                  itemCount: goal.history.length,
-                                  itemBuilder: (context, hIndex) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 4.0),
-                                      child: Text(
-                                        goal.history[hIndex],
-                                        style: TextStyle(color: accentGreen, fontFamily: 'Courier', fontSize: 9, fontWeight: FontWeight.bold),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ]
-                        ],
+                        ),
                       ],
                     ),
                   );
