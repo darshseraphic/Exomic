@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'settings.dart'; // Ensure correct import path for the settings providers
 
 class BudgetLimit {
   final String category;
@@ -57,9 +58,13 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
   @override
   Widget build(BuildContext context) {
     final budgets = ref.watch(budgetPlannerProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    const specBorderColor = Color(0xFF191919);
+    // Direct observations to achieve instantaneous theme updates
+    final isDark = ref.watch(settingsThemeModeProvider);
+    final currency = ref.watch(currencyProvider);
+
+    // Reactive styles definition mapping
+    final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     const alertRed = Color(0xFFE63946);
@@ -140,7 +145,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                               labelText: 'METRIC CATEGORY LABEL',
                               labelStyle: TextStyle(color: textSub, fontSize: 11),
                               isDense: true,
-                              enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                               focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                             ),
                           ),
@@ -150,14 +155,14 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             style: TextStyle(color: textMain, fontSize: 14),
                             decoration: InputDecoration(
-                                labelText: 'MAXIMUM LIQUIDITY LIMIT CAP',
-                                labelStyle: TextStyle(color: textSub, fontSize: 11),
-                                prefixText: '\$ ',
-                                prefixStyle: TextStyle(color: textMain, fontSize: 14),
-                                isDense: true,
-                                enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
-                                                       ),
+                              labelText: 'MAXIMUM LIQUIDITY LIMIT CAP',
+                              labelStyle: TextStyle(color: textSub, fontSize: 11),
+                              prefixText: '$currency ',
+                              prefixStyle: TextStyle(color: textMain, fontSize: 14),
+                              isDense: true,
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                            ),
                           ),
                           const SizedBox(height: 24),
                           InkWell(
@@ -213,8 +218,8 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
               ),
             ),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: Divider(color: specBorderColor, height: 1),
             ),
 
@@ -291,7 +296,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                   Text('LIMIT', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold)),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '\$${limit.allocated.toStringAsFixed(0)}',
+                                    '$currency${limit.allocated.toStringAsFixed(0)}',
                                     style: TextStyle(color: textMain, fontSize: 13),
                                   ),
                                 ],
@@ -305,7 +310,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                   Text('OUTFLOW', style: TextStyle(color: textSub, fontSize: 9, fontWeight: FontWeight.bold)),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '\$${limit.currentOutflow.toStringAsFixed(2)}',
+                                    '$currency${limit.currentOutflow.toStringAsFixed(2)}',
                                     style: TextStyle(color: textMain, fontSize: 13),
                                   ),
                                 ],
@@ -320,8 +325,8 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                   const SizedBox(height: 2),
                                   Text(
                                     isBreached
-                                        ? '-\$${margin.abs().toStringAsFixed(2)}'
-                                        : '\$${margin.toStringAsFixed(2)}',
+                                        ? '-$currency${margin.abs().toStringAsFixed(2)}'
+                                        : '$currency${margin.toStringAsFixed(2)}',
                                     style: TextStyle(color: labelColor, fontSize: 13, fontWeight: FontWeight.bold),
                                   ),
                                 ],

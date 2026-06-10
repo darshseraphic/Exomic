@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database.dart';
+import 'settings.dart'; // Import to access global theme & currency providers
 
 class SavingGoal {
   final String id;
@@ -87,23 +88,23 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
       dialogBackgroundColor: const Color(0xFF050505),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 12),
+          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
           foregroundColor: Colors.white,
         ),
       ),
     )
         : ThemeData.light().copyWith(
-      scaffoldBackgroundColor: const Color(0xFFF9F9F9),
+      scaffoldBackgroundColor: const Color(0xFFFAFAFA),
       colorScheme: const ColorScheme.light(
         primary: Colors.black,
         onPrimary: Colors.white,
         surface: Color(0xFFF5F5F5),
         onSurface: Colors.black,
       ),
-      dialogBackgroundColor: const Color(0xFFF9F9F9),
+      dialogBackgroundColor: const Color(0xFFFAFAFA),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 12),
+          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
           foregroundColor: Colors.black,
         ),
       ),
@@ -129,9 +130,13 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
   @override
   Widget build(BuildContext context) {
     final goalsList = ref.watch(savingGoalsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    const specBorderColor = Color(0xFF191919);
+    // Direct observations to achieve instantaneous theme and currency updates
+    final isDark = ref.watch(settingsThemeModeProvider);
+    final currency = ref.watch(currencyProvider);
+
+    // Reactive styles definition mapping
+    final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF4A4A4A) : const Color(0xFFB5B5B5);
     final textFootnote = isDark ? const Color(0xFFA3A3A3) : const Color(0xFF525252);
@@ -174,7 +179,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                             labelText: 'POOL DESTINATION TARGET',
                             labelStyle: TextStyle(color: textFootnote, fontSize: 11),
                             isDense: true,
-                            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                             focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                           ),
                         ),
@@ -189,10 +194,10 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'TARGET CAP',
                                   labelStyle: TextStyle(color: textFootnote, fontSize: 11),
-                                  prefixText: '\$ ',
+                                  prefixText: '$currency ',
                                   prefixStyle: TextStyle(color: textMain, fontSize: 14),
                                   isDense: true,
-                                  enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                                   focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                                 ),
                               ),
@@ -206,10 +211,10 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'INIT RESERVE',
                                   labelStyle: TextStyle(color: textFootnote, fontSize: 11),
-                                  prefixText: '\$ ',
+                                  prefixText: '$currency ',
                                   prefixStyle: TextStyle(color: textMain, fontSize: 14),
                                   isDense: true,
-                                  enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                                   focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                                 ),
                               ),
@@ -226,7 +231,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                               onTap: () => _pickDeadlineDate(context, isDark),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   border: Border(bottom: BorderSide(color: specBorderColor, width: 1.0)),
                                 ),
                                 child: Row(
@@ -271,7 +276,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
 
                               final List<String> initialHistory = [];
                               if (actualCurrent > 0) {
-                                initialHistory.add('[${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}] INIT VALUE ASSIGNED: +\$${actualCurrent.toStringAsFixed(2)}');
+                                initialHistory.add('[${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}] INIT VALUE ASSIGNED: +$currency${actualCurrent.toStringAsFixed(2)}');
                               }
 
                               final newGoal = SavingGoal(
@@ -356,7 +361,6 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                 },
                                 child: Row(
                                   children: [
-                                    // Smooth rotation toggle on the stateful indicators
                                     AnimatedRotation(
                                       duration: const Duration(milliseconds: 200),
                                       turns: isExpandedForDeposit ? 0.25 : 0.0,
@@ -402,11 +406,11 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'FUNDED: \$${goal.current.toStringAsFixed(2)}',
+                              'FUNDED: $currency${goal.current.toStringAsFixed(2)}',
                               style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                             Text(
-                              'CAP: \$${goal.target.toStringAsFixed(2)}',
+                              'CAP: $currency${goal.target.toStringAsFixed(2)}',
                               style: TextStyle(color: textSub, fontSize: 12),
                             ),
                           ],
@@ -437,7 +441,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                'PACE: \$${goal.dailyPaceRequired.toStringAsFixed(2)} / DAY',
+                                'PACE: $currency${goal.dailyPaceRequired.toStringAsFixed(2)} / DAY',
                                 style: TextStyle(color: textFootnote, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.1),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -450,7 +454,6 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                           ],
                         ),
 
-                        // FIXED: Replaced raw array spread tracking block with a fluid CrossFade wrapper layout
                         AnimatedCrossFade(
                           duration: const Duration(milliseconds: 250),
                           sizeCurve: Curves.easeInOutCubic,
@@ -464,7 +467,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 16),
-                              const Divider(color: specBorderColor, height: 1, thickness: 0.5),
+                              Divider(color: specBorderColor, height: 1, thickness: 0.5),
                               const SizedBox(height: 12),
                               Row(
                                 children: [
@@ -476,10 +479,10 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                       decoration: InputDecoration(
                                         labelText: 'APPEND LIQUIDITY INBOUND',
                                         labelStyle: TextStyle(color: textFootnote, fontSize: 9),
-                                        prefixText: '\$ ',
+                                        prefixText: '$currency ',
                                         prefixStyle: TextStyle(color: textMain, fontSize: 12),
                                         isDense: true,
-                                        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
                                         focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
                                       ),
                                     ),
@@ -508,7 +511,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                         final String timestampStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
                                         final List<String> updatedHistory = [
                                           ...goal.history,
-                                          '[$timestampStr] REALLOCATED: +\$${depositAmount.toStringAsFixed(2)}'
+                                          '[$timestampStr] REALLOCATED: +$currency${depositAmount.toStringAsFixed(2)}'
                                         ];
 
                                         final updatedGoal = SavingGoal(

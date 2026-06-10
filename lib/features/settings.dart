@@ -55,8 +55,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: bgColor,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: borderColor, width: 0.8),
+          shape: const RoundedRectangleBorder(
+            side: BorderSide(color: Colors.transparent, width: 0),
             borderRadius: BorderRadius.zero,
           ),
           title: Text(
@@ -98,13 +98,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Text('// CONFIG_PANEL', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Courier')),
               const SizedBox(height: 24),
 
-              // THEME INTERFACE RULE
+              // THEME INTERFACE RULE (OPTIMIZED MUTATION)
               _buildActionTile(
                 label: 'UI_THEME_MODE',
                 valueText: isDark ? '[ DARK ]' : '[ LIGHT ]',
                 borderColor: borderColor,
                 textMain: textMain,
-                onTap: () => ref.read(settingsThemeModeProvider.notifier).update((state) => !state),
+                onTap: () {
+                  // Direct state assignment executes pipeline redraws immediately
+                  ref.read(settingsThemeModeProvider.notifier).state = !isDark;
+                },
               ),
               const SizedBox(height: 12),
 
