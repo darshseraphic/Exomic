@@ -80,9 +80,58 @@ class ExpenseItem {
 }
 
 final incomeProvider = StateProvider<double>((ref) => ExomicDatabaseEngine.getIncome());
+
 final ledgerStreamProvider = StateProvider<List<ExpenseItem>>((ref) {
+  // 1. Fetch persistent standard transaction logs from database engine
   final rawList = ExomicDatabaseEngine.getHistory();
-  return rawList.map((item) => ExpenseItem.fromMap(item as Map)).toList();
+  final List<ExpenseItem> expenses = rawList.map((item) => ExpenseItem.fromMap(item as Map)).toList();
+
+  // 2. Fetch and parse incremental deposit logs from asset pools
+  try {
+    final pools = ExomicDatabaseEngine.getPools();
+    final now = DateTime.now();
+    final datePrefix = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    for (var pool in pools) {
+      final String title = pool['title'] ?? 'SAVINGS POOL';
+      final List? historyList = pool['history'] as List?;
+
+      if (historyList != null) {
+        for (var entry in historyList) {
+          if (entry is String && entry.contains('+')) {
+            final parts = entry.split('+');
+            if (parts.length > 1) {
+              // Extract numeric value safely ignoring any localized symbols
+              final amtStr = parts[1].replaceAll(RegExp(r'[^\d.]'), '');
+              final amt = double.tryParse(amtStr) ?? 0.0;
+
+              if (amt > 0) {
+                // Extract timestamp signature [HH:MM] from deposit log
+                String timePart = "00:00";
+                final timeMatch = RegExp(r'\[(\d{2}:\d{2})\]').firstMatch(entry);
+                if (timeMatch != null) {
+                  timePart = timeMatch.group(1)!;
+                }
+
+                expenses.add(ExpenseItem(
+                  timestamp: "$datePrefix $timePart",
+                  description: "DEPOSIT TO $title",
+                  category: "SAVINGS",
+                  amount: amt,
+                ));
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (_) {
+    // Graceful fallback if pool streams are uninitialized or mismatch formats
+  }
+
+  // 3. Sort chronologically by timestamp descending to place the newest events first
+  expenses.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+  return expenses;
 });
 
 class ExpenseLogScreen extends ConsumerStatefulWidget {
@@ -380,7 +429,10 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                             final newList = [updatedItem, ...currentList];
 
                             ref.read(ledgerStreamProvider.notifier).state = newList;
-                            await ExomicDatabaseEngine.saveHistory(newList.map((e) => e.toMap()).toList());
+
+                            // Filter out dynamic 'SAVINGS' logs before saving history into expenseBox to avoid database corruption or duplicate logs
+                            final serializableList = newList.where((e) => e.category != 'SAVINGS').map((e) => e.toMap()).toList();
+                            await ExomicDatabaseEngine.saveHistory(serializableList);
 
                             _amountController.clear();
                             _descController.clear();

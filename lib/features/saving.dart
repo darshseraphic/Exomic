@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database.dart';
 import 'settings.dart'; // Import to access global theme & currency providers
+import 'expense.dart'; // LINKED BACKEND: Imported to access ledgerStreamProvider and ExpenseItem
 
 class SavingGoal {
   final String id;
@@ -69,6 +70,7 @@ class SavingGoal {
 
 // Global provider mapping directly to your app's database storage boxes
 final savingsProvider = StateProvider<List<SavingGoal>>((ref) {
+  // Explicitly convert stored SavingGoalModel entries into UI-bound SavingGoal instances
   return ExomicDatabaseEngine.savingsBox.values.map((model) => SavingGoal(
     id: model.id,
     title: model.title,
@@ -161,6 +163,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
       final updatedList = [...currentGoals, newGoal];
       ref.read(savingsProvider.notifier).state = updatedList;
 
+      // Transformed structure to a clean SavingGoalModel before DB insertion
       await ExomicDatabaseEngine.savingsBox.put(
         newGoal.id,
         SavingGoalModel(
@@ -170,7 +173,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
           current: newGoal.current,
           deadline: newGoal.deadline,
           dailyPaceRequired: newGoal.dailyPaceRequired,
-          history: newGoal.history,
+          history: newGoal.history, // Passes history array to DB
         ),
       );
 
@@ -194,6 +197,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
 
     final newCurrent = goal.current + depositAmount;
 
+    // Recalculate daily pace
     final deadlineDate = DateTime.parse(goal.deadline);
     final daysLeft = deadlineDate.difference(DateTime.now()).inDays;
     final remainingAmount = goal.target - newCurrent;
@@ -218,6 +222,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
 
     ref.read(savingsProvider.notifier).state = updatedList;
 
+    // Transformed structure to a clean SavingGoalModel before DB updates
     await ExomicDatabaseEngine.savingsBox.put(
       updatedGoal.id,
       SavingGoalModel(
@@ -227,9 +232,32 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
         current: updatedGoal.current,
         deadline: updatedGoal.deadline,
         dailyPaceRequired: updatedGoal.dailyPaceRequired,
-        history: updatedGoal.history,
+        history: updatedGoal.history, // Passes history array to DB
       ),
     );
+
+    // =========================================================================
+    // CROSS-OVER LINKING LOGIC (Affects Running Balance dynamically)
+    // =========================================================================
+    final dateString = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final transactionTimestamp = "$dateString $timeString";
+
+    final savingsInterceptionItem = ExpenseItem(
+      timestamp: transactionTimestamp,
+      description: "DEPOSIT: ${goal.title}",
+      category: "OPERATIONS",
+      amount: -depositAmount, // Passing negative decreases month deductions, increasing Running Balance
+    );
+
+    final currentLedger = ref.read(ledgerStreamProvider);
+    final updatedLedger = [savingsInterceptionItem, ...currentLedger];
+
+    // Triggers instantaneous state notifications across all active widget systems
+    ref.read(ledgerStreamProvider.notifier).state = updatedLedger;
+
+    // Persists the newly intercepted array directly into standard encrypted storage structures
+    await ExomicDatabaseEngine.saveHistory(updatedLedger.map((e) => e.toMap()).toList());
+    // =========================================================================
 
     _getDepositController(goal.id).clear();
     FocusScope.of(context).unfocus();
@@ -245,7 +273,6 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
     final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
-    final accentGreen = isDark ? const Color(0xFF4BB543) : const Color(0xFF2E7D32);
     final progressBg = isDark ? const Color(0xFF1A1A1A) : const Color(0xFFE0E0E0);
 
     return Theme(
@@ -423,7 +450,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
-                      border: Border.all(color: isComplete ? accentGreen.withOpacity(0.5) : specBorderColor, width: 0.8),
+                      border: Border.all(color: specBorderColor, width: 0.8),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,13 +475,13 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                         goal.title,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(color: isComplete ? accentGreen : textMain, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter'),
+                                        style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter'),
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    isComplete ? '[ MAXED ]' : '[ TGT: $currency${goal.target.toStringAsFixed(0)} ]',
+                                    '[ TGT: $currency${goal.target.toStringAsFixed(0)} ]',
                                     style: TextStyle(color: textSub, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
                                   ),
                                 ],
@@ -496,7 +523,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                         const SizedBox(height: 2),
                                         Text(
                                           '${(progress * 100).toStringAsFixed(1)}%',
-                                          style: TextStyle(color: isComplete ? accentGreen : textMain, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                                          style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
                                         ),
                                       ],
                                     ),
@@ -512,7 +539,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                 child: FractionallySizedBox(
                                   alignment: Alignment.centerLeft,
                                   widthFactor: progress,
-                                  child: Container(color: isComplete ? accentGreen : textMain),
+                                  child: Container(color: textMain),
                                 ),
                               ),
                             ],
@@ -520,60 +547,58 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                         ),
 
                         // Interactive Action Matrix (Deposit & Logs)
-                        if (!isComplete) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              border: Border(top: BorderSide(color: specBorderColor, width: 0.8)),
-                              color: textMain.withOpacity(isDark ? 0.03 : 0.02),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: SizedBox(
-                                    height: 36,
-                                    child: TextField(
-                                      controller: _getDepositController(goal.id),
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
-                                      decoration: InputDecoration(
-                                        hintText: 'INSERT LIQUIDITY',
-                                        hintStyle: TextStyle(color: textSub.withOpacity(0.5), fontSize: 11, fontFamily: 'Inter'),
-                                        prefixText: '$currency ',
-                                        prefixStyle: TextStyle(color: textSub, fontSize: 13, fontFamily: 'Inter'),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                                        filled: true,
-                                        fillColor: Colors.transparent,
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.zero,
-                                          borderSide: BorderSide(color: specBorderColor),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.zero,
-                                          borderSide: BorderSide(color: textMain),
-                                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            border: Border(top: BorderSide(color: specBorderColor, width: 0.8)),
+                            color: textMain.withOpacity(isDark ? 0.03 : 0.02),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                  height: 36,
+                                  child: TextField(
+                                    controller: _getDepositController(goal.id),
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                                    decoration: InputDecoration(
+                                      hintText: 'INSERT LIQUIDITY',
+                                      hintStyle: TextStyle(color: textSub.withOpacity(0.5), fontSize: 11, fontFamily: 'Inter'),
+                                      prefixText: '$currency ',
+                                      prefixStyle: TextStyle(color: textSub, fontSize: 13, fontFamily: 'Inter'),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                      filled: true,
+                                      fillColor: Colors.transparent,
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.zero,
+                                        borderSide: BorderSide(color: specBorderColor),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.zero,
+                                        borderSide: BorderSide(color: textMain),
                                       ),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                InkWell(
-                                  onTap: () => _processDeposit(goal, _getDepositController(goal.id).text, currency),
-                                  child: Container(
-                                    height: 36,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    alignment: Alignment.center,
-                                    color: textMain,
-                                    child: Text(
-                                      'DEPOSIT',
-                                      style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Inter', letterSpacing: 0.5),
-                                    ),
+                              ),
+                              const SizedBox(width: 12),
+                              InkWell(
+                                onTap: () => _processDeposit(goal, _getDepositController(goal.id).text, currency),
+                                child: Container(
+                                  height: 36,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  alignment: Alignment.center,
+                                  color: textMain,
+                                  child: Text(
+                                    'DEPOSIT',
+                                    style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Inter', letterSpacing: 0.5),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
 
                         // Expandable History Log Toggle
                         if (goal.history.isNotEmpty) ...[
@@ -611,7 +636,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                             ),
                           ),
 
-                          // NEW REDESIGNED EXPENSE-STYLE LOG VIEW
+                          // REDESIGNED EXPENSE-STYLE LOG VIEW
                           AnimatedCrossFade(
                             duration: const Duration(milliseconds: 250),
                             sizeCurve: Curves.easeInOutCubic,
@@ -630,9 +655,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                   String title = 'TRANSACTION';
                                   String subtitle = 'POOL UPDATE';
                                   String displayAmount = '';
-                                  Color amountColor = textMain;
 
-                                  // Check if log string is an initialization event
                                   if (logText.startsWith('INIT:')) {
                                     displayTime = 'INIT';
                                     title = 'POOL INITIALIZED';
@@ -644,17 +667,13 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                     }
                                     final targetStr = logText.replaceAll('INIT: TARGET ', '').split(' SET FOR ')[0];
                                     displayAmount = '$currency$targetStr';
-                                    amountColor = textSub;
-                                  }
-                                  // Check if log string is a deposit entry
-                                  else if (logText.startsWith('[')) {
+                                  } else if (logText.startsWith('[')) {
                                     final closeIndex = logText.indexOf(']');
                                     if (closeIndex != -1) {
                                       displayTime = logText.substring(1, closeIndex);
                                       displayAmount = logText.substring(closeIndex + 1).trim();
                                       title = 'LIQUIDITY DEPOSIT';
                                       subtitle = 'POOL INFLOW';
-                                      amountColor = accentGreen;
                                     }
                                   } else {
                                     title = logText;
@@ -679,7 +698,7 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
                                             ],
                                           ),
                                         ),
-                                        Text(displayAmount, style: TextStyle(color: amountColor, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                                        Text(displayAmount, style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
                                       ],
                                     ),
                                   );

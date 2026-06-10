@@ -63,7 +63,7 @@ class SavingGoalModel extends HiveObject {
   @HiveField(5)
   final double dailyPaceRequired;
   @HiveField(6)
-  final List<String>? history; // FIXED: Added history persistence log node
+  final List<String>? history;
 
   SavingGoalModel({
     required this.id,
@@ -175,13 +175,34 @@ class ExomicDatabaseEngine {
     await settingsBox.put('flexible_subscription_stream', serializedList);
   }
 
+  // FIXED: Pull directly from the strongly-typed savingsBox instead of the legacy string
   static List<Map<String, dynamic>> getPools() {
-    final dynamic rawData = settingsBox.get('flexible_pools_stream');
-    if (rawData == null) return [];
-    return (rawData as List).map((p) => Map<String, dynamic>.from(p as Map)).toList();
+    final items = savingsBox.values.toList();
+    return items.map((e) => {
+      'id': e.id,
+      'title': e.title,
+      'target': e.target,
+      'current': e.current,
+      'deadline': e.deadline,
+      'dailyPaceRequired': e.dailyPaceRequired,
+      'history': e.history ?? [],
+    }).toList();
   }
 
+  // FIXED: Route legacy savePools calls to update the natively typed savingsBox
   static Future<void> savePools(List<Map<String, dynamic>> serializedList) async {
-    await settingsBox.put('flexible_pools_stream', serializedList);
+    await savingsBox.clear();
+    for (var map in serializedList) {
+      final item = SavingGoalModel(
+        id: map['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        title: map['title'] ?? '',
+        target: (map['target'] as num?)?.toDouble() ?? 0.0,
+        current: (map['current'] as num?)?.toDouble() ?? 0.0,
+        deadline: map['deadline'] ?? '',
+        dailyPaceRequired: (map['dailyPaceRequired'] as num?)?.toDouble() ?? 0.0,
+        history: List<String>.from(map['history'] ?? []),
+      );
+      await savingsBox.put(item.id, item);
+    }
   }
 }
