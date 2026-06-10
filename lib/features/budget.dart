@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'settings.dart'; // Ensure correct import path for the settings providers
+import '../../core/database.dart'; // Added to ensure database syncing works
+import 'settings.dart';
 
 class BudgetLimit {
   final String category;
@@ -26,14 +27,14 @@ class BudgetLimit {
   );
 }
 
-// Global state provider initializing with baseline tracking matrix data
+// Global state provider initializing directly from your secure Hive storage instance
 final budgetPlannerProvider = StateProvider<List<BudgetLimit>>((ref) {
-  return [
-    const BudgetLimit(category: 'HARDWARE', allocated: 1000.00, currentOutflow: 850.00),
-    const BudgetLimit(category: 'OPERATIONS', allocated: 500.00, currentOutflow: 542.00),
-    const BudgetLimit(category: 'INFRASTRUCTURE', allocated: 3000.00, currentOutflow: 1280.00),
-    const BudgetLimit(category: 'LIFESTYLE', allocated: 300.00, currentOutflow: 290.00),
-  ];
+  final rawList = ExomicDatabaseEngine.budgetBox.values.toList();
+  return rawList.map((item) => BudgetLimit(
+    category: item.category,
+    allocated: item.allocated,
+    currentOutflow: item.currentOutflow,
+  )).toList();
 });
 
 class BudgetPlannerScreen extends ConsumerStatefulWidget {
@@ -59,14 +60,14 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
   Widget build(BuildContext context) {
     final budgets = ref.watch(budgetPlannerProvider);
 
-    // Direct observations to achieve instantaneous theme updates
+    // Direct observations to achieve instantaneous theme and currency updates
     final isDark = ref.watch(settingsThemeModeProvider);
     final currency = ref.watch(currencyProvider);
 
-    // Reactive styles definition mapping
+    // Reactive styles definition mapping perfectly synced with expense.dart
     final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
-    final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
+    final textSub = isDark ? const Color(0xFFF5F3F4) : const Color(0xFF4A4A4A);
     const alertRed = Color(0xFFE63946);
 
     return Theme(
@@ -97,9 +98,16 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // FIX: Standardized header styling to match other app tabs perfectly
                         Text(
-                          'BUDGET TARGETS',
-                          style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                          'BUDGET_PANEL',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                            fontFamily: 'Inter',
+                            color: textSub,
+                          ),
                         ),
                         Row(
                           children: [
@@ -166,7 +174,7 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                           ),
                           const SizedBox(height: 24),
                           InkWell(
-                            onTap: () {
+                            onTap: () async {
                               final String category = _categoryController.text.trim().toUpperCase();
                               final double? allocatedAmount = double.tryParse(_allocationController.text);
 
@@ -189,7 +197,18 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                                   ];
                                 }
 
+                                // Update Riverpod State
                                 ref.read(budgetPlannerProvider.notifier).state = updatedList;
+
+                                // FIX: Save new entry to persistent Hive storage
+                                await ExomicDatabaseEngine.budgetBox.clear();
+                                for (var limit in updatedList) {
+                                  await ExomicDatabaseEngine.budgetBox.add(BudgetLimitModel(
+                                    category: limit.category,
+                                    allocated: limit.allocated,
+                                    currentOutflow: limit.currentOutflow,
+                                  ));
+                                }
 
                                 _categoryController.clear();
                                 _allocationController.clear();
@@ -260,9 +279,21 @@ class _BudgetPlannerScreenState extends ConsumerState<BudgetPlannerScreen> {
                           children: [
                             Expanded(
                               child: GestureDetector(
-                                onLongPress: () {
+                                onLongPress: () async {
                                   final updatedList = budgets.where((element) => element.category != limit.category).toList();
+
+                                  // Update Riverpod State
                                   ref.read(budgetPlannerProvider.notifier).state = updatedList;
+
+                                  // FIX: Handle Hive Database Deletion successfully
+                                  await ExomicDatabaseEngine.budgetBox.clear();
+                                  for (var b in updatedList) {
+                                    await ExomicDatabaseEngine.budgetBox.add(BudgetLimitModel(
+                                      category: b.category,
+                                      allocated: b.allocated,
+                                      currentOutflow: b.currentOutflow,
+                                    ));
+                                  }
                                 },
                                 child: Text(
                                   limit.category,

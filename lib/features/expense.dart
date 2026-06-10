@@ -129,6 +129,12 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
     final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
     final systemTextColor = isDark ? const Color(0xFFF5F3F4) : const Color(0xFF4A4A4A);
+    const alertRed = Color(0xFFE63946);
+
+    // Synchronize text field input value when data exists out of engine
+    if (_incomeController.text.isEmpty && originalIncome > 0) {
+      _incomeController.text = originalIncome.toStringAsFixed(2);
+    }
 
     // Calculate current month token signature
     final DateTime nowTime = DateTime.now();
@@ -136,10 +142,7 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
 
     // Only compute dynamic deductions if the item falls within the active current month
     double currentMonthDeductions = history.where((item) {
-      if (item.timestamp.contains('/')) {
-        return item.timestamp.startsWith(currentMonthSignature);
-      }
-      return true;
+      return item.timestamp.startsWith(currentMonthSignature);
     }).fold(0.0, (sum, item) => sum + item.amount);
 
     double dynamicRemainingBalance = originalIncome - currentMonthDeductions;
@@ -153,7 +156,7 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -211,7 +214,23 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                     ),
                     if (originalIncome > 0) ...[
                       const SizedBox(height: 24),
-                      Text('RUNNING BALANCE', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('RUNNING BALANCE', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                          GestureDetector(
+                            onTap: () async {
+                              ref.read(incomeProvider.notifier).state = 0.0;
+                              await ExomicDatabaseEngine.saveIncome(0.0);
+                              _incomeController.clear();
+                            },
+                            child: const Text(
+                              '[RESET]',
+                              style: TextStyle(color: alertRed, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
                       AnimatedRollingCounter(
                         value: dynamicRemainingBalance,

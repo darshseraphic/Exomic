@@ -120,6 +120,15 @@ class ExomicDatabaseEngine {
   static Box<BudgetLimitModel> get budgetBox => Hive.box<BudgetLimitModel>(budgetBoxName);
   static Box get settingsBox => Hive.box(settingsBoxName);
 
+  // --- PERSISTENT CONFIG MANAGEMENT ---
+  static bool getThemeMode() {
+    return settingsBox.get('is_dark_mode', defaultValue: true) as bool;
+  }
+
+  static Future<void> saveThemeMode(bool isDark) async {
+    await settingsBox.put('is_dark_mode', isDark);
+  }
+
   static double getIncome() {
     return settingsBox.get('monthly_income', defaultValue: 0.0) as double;
   }
@@ -163,7 +172,6 @@ class ExomicDatabaseEngine {
     await settingsBox.put('flexible_subscription_stream', serializedList);
   }
 
-  // FIXED: Handles Pools data storage directly through serial maps to stay robust against adapter changes
   static List<Map<String, dynamic>> getPools() {
     final dynamic rawData = settingsBox.get('flexible_pools_stream');
     if (rawData == null) return [];

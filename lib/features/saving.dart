@@ -58,89 +58,31 @@ class SavingGoalsScreen extends ConsumerStatefulWidget {
 class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _targetController = TextEditingController();
-  final TextEditingController _currentController = TextEditingController();
-
-  String? _selectedPoolIdForDeposit;
+  final TextEditingController _daysController = TextEditingController();
   final TextEditingController _depositController = TextEditingController();
 
-  DateTime? _selectedDeadline;
+  bool _isCreationFormOpen = false;
+  String? _expandedGoalId;
 
   @override
   void dispose() {
     _titleController.dispose();
     _targetController.dispose();
-    _currentController.dispose();
+    _daysController.dispose();
     _depositController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickDeadlineDate(BuildContext context, bool isDark) async {
-    final DateTime now = DateTime.now();
-    final ThemeData datePickerTheme = isDark
-        ? ThemeData.dark().copyWith(
-      scaffoldBackgroundColor: const Color(0xFF050505),
-      colorScheme: const ColorScheme.dark(
-        primary: Colors.white,
-        onPrimary: Colors.black,
-        surface: Color(0xFF0A0A0A),
-        onSurface: Colors.white,
-      ),
-      dialogBackgroundColor: const Color(0xFF050505),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
-          foregroundColor: Colors.white,
-        ),
-      ),
-    )
-        : ThemeData.light().copyWith(
-      scaffoldBackgroundColor: const Color(0xFFFAFAFA),
-      colorScheme: const ColorScheme.light(
-        primary: Colors.black,
-        onPrimary: Colors.white,
-        surface: Color(0xFFF5F5F5),
-        onSurface: Colors.black,
-      ),
-      dialogBackgroundColor: const Color(0xFFFAFAFA),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
-          foregroundColor: Colors.black,
-        ),
-      ),
-    );
-
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: now.add(const Duration(days: 30)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 3650)),
-      builder: (context, child) {
-        return Theme(data: datePickerTheme, child: child!);
-      },
-    );
-
-    if (picked != null) {
-      setState(() {
-        _selectedDeadline = picked;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final goalsList = ref.watch(savingGoalsProvider);
-
-    // Direct observations to achieve instantaneous theme and currency updates
+    final goals = ref.watch(savingGoalsProvider);
     final isDark = ref.watch(settingsThemeModeProvider);
     final currency = ref.watch(currencyProvider);
 
-    // Reactive styles definition mapping
     final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
-    final textSub = isDark ? const Color(0xFF4A4A4A) : const Color(0xFFB5B5B5);
-    final textFootnote = isDark ? const Color(0xFFA3A3A3) : const Color(0xFF525252);
-    const alertRed = Color(0xFFE63946);
+    final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
+    final systemTextColor = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     final accentGreen = isDark ? const Color(0xFF4BB543) : const Color(0xFF2E7D32);
 
     return Theme(
@@ -156,408 +98,360 @@ class _SavingGoalsScreenState extends ConsumerState<SavingGoalsScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 8.0),
+            // CONTROL ACTION INTERFACE
+            Padding(
+              padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ASSET POOLS REALLOCATION', style: TextStyle(color: textFootnote, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      border: Border.all(color: specBorderColor, width: 0.8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isCreationFormOpen = !_isCreationFormOpen;
+                      });
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        TextField(
-                          controller: _titleController,
-                          style: TextStyle(color: textMain, fontSize: 14),
-                          decoration: InputDecoration(
-                            labelText: 'POOL DESTINATION TARGET',
-                            labelStyle: TextStyle(color: textFootnote, fontSize: 11),
-                            isDense: true,
-                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                        Text(
+                          'SAVING_GOALS',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                            fontFamily: 'Inter',
+                            color: systemTextColor,
                           ),
                         ),
-                        const SizedBox(height: 16),
                         Row(
                           children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _targetController,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                style: TextStyle(color: textMain, fontSize: 14),
-                                decoration: InputDecoration(
-                                  labelText: 'TARGET CAP',
-                                  labelStyle: TextStyle(color: textFootnote, fontSize: 11),
-                                  prefixText: '$currency ',
-                                  prefixStyle: TextStyle(color: textMain, fontSize: 14),
-                                  isDense: true,
-                                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
-                                ),
-                              ),
+                            Text(
+                              _isCreationFormOpen ? '[ CLOSE ]' : '[ ALLOCATE ]',
+                              style: TextStyle(color: textMain, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
                             ),
-                            const SizedBox(width: 24),
-                            Expanded(
-                              child: TextField(
-                                controller: _currentController,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                style: TextStyle(color: textMain, fontSize: 14),
-                                decoration: InputDecoration(
-                                  labelText: 'INIT RESERVE',
-                                  labelStyle: TextStyle(color: textFootnote, fontSize: 11),
-                                  prefixText: '$currency ',
-                                  prefixStyle: TextStyle(color: textMain, fontSize: 14),
-                                  isDense: true,
-                                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
-                                ),
-                              ),
+                            const SizedBox(width: 4),
+                            AnimatedRotation(
+                              duration: const Duration(milliseconds: 200),
+                              turns: _isCreationFormOpen ? 0.25 : 0.0,
+                              child: Icon(Icons.keyboard_arrow_right, color: systemTextColor, size: 14),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 24),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('TARGET INTERCEPT DEADLINE', style: TextStyle(color: textFootnote, fontSize: 11)),
-                            const SizedBox(height: 4),
-                            GestureDetector(
-                              onTap: () => _pickDeadlineDate(context, isDark),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  border: Border(bottom: BorderSide(color: specBorderColor, width: 1.0)),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      _selectedDeadline == null
-                                          ? 'SELECT MATURITY DEADLINE'
-                                          : '${_selectedDeadline!.year}-${_selectedDeadline!.month.toString().padLeft(2, '0')}-${_selectedDeadline!.day.toString().padLeft(2, '0')}',
-                                      style: TextStyle(
-                                          color: _selectedDeadline == null ? textFootnote.withOpacity(0.5) : textMain,
-                                          fontSize: 14,
-                                          fontWeight: _selectedDeadline == null ? FontWeight.normal : FontWeight.bold
-                                      ),
-                                    ),
-                                    Icon(Icons.calendar_today_outlined, color: textFootnote, size: 14),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 28),
-                        InkWell(
-                          onTap: () async {
-                            final String title = _titleController.text.trim().toUpperCase();
-                            final double? parsedTarget = double.tryParse(_targetController.text);
-                            final double? parsedCurrent = double.tryParse(_currentController.text);
-
-                            if (title.isNotEmpty && parsedTarget != null && parsedTarget > 0 && _selectedDeadline != null) {
-                              final dateStr = '${_selectedDeadline!.year}-${_selectedDeadline!.month.toString().padLeft(2, '0')}-${_selectedDeadline!.day.toString().padLeft(2, '0')}';
-
-                              final today = DateTime.now();
-                              final difference = _selectedDeadline!.difference(today).inDays;
-                              final remainingDays = difference <= 0 ? 1 : difference;
-
-                              final double actualTarget = parsedTarget;
-                              final double actualCurrent = parsedCurrent ?? 0.0;
-
-                              final double balanceNeeded = actualTarget - actualCurrent;
-                              final double pace = balanceNeeded <= 0 ? 0.0 : (balanceNeeded / remainingDays);
-
-                              final List<String> initialHistory = [];
-                              if (actualCurrent > 0) {
-                                initialHistory.add('[${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}] INIT VALUE ASSIGNED: +$currency${actualCurrent.toStringAsFixed(2)}');
-                              }
-
-                              final newGoal = SavingGoal(
-                                id: DateTime.now().microsecondsSinceEpoch.toString(),
-                                title: title,
-                                target: actualTarget,
-                                current: actualCurrent,
-                                deadline: dateStr,
-                                dailyPaceRequired: pace,
-                                history: initialHistory,
-                              );
-
-                              final updatedList = [...goalsList, newGoal];
-                              ref.read(savingGoalsProvider.notifier).state = updatedList;
-                              await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
-
-                              _titleController.clear();
-                              _targetController.clear();
-                              _currentController.clear();
-                              setState(() {
-                                _selectedDeadline = null;
-                              });
-                              FocusScope.of(context).unfocus();
-                            }
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            color: textMain,
-                            alignment: Alignment.center,
-                            child: Text(
-                              'INITIALIZE LIQUIDITY POOL',
-                              style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                            ),
-                          ),
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  AnimatedCrossFade(
+                    duration: const Duration(milliseconds: 250),
+                    sizeCurve: Curves.easeInOutCubic,
+                    firstCurve: Curves.easeInQuad,
+                    secondCurve: Curves.easeOutQuad,
+                    crossFadeState: _isCreationFormOpen ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                    firstChild: const SizedBox(width: double.infinity),
+                    secondChild: Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        border: Border.all(color: specBorderColor, width: 0.8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            controller: _titleController,
+                            style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                            decoration: InputDecoration(
+                              labelText: 'TARGET OBJECTIVE LABEL',
+                              labelStyle: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
+                              isDense: true,
+                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _targetController,
+                                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                  style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                                  decoration: InputDecoration(
+                                    labelText: 'TARGET SUM',
+                                    labelStyle: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
+                                    prefixText: '$currency ',
+                                    prefixStyle: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                                    isDense: true,
+                                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: TextField(
+                                  controller: _daysController,
+                                  keyboardType: TextInputType.number,
+                                  style: TextStyle(color: textMain, fontSize: 14, fontFamily: 'Inter'),
+                                  decoration: InputDecoration(
+                                    labelText: 'HORIZON (DAYS)',
+                                    labelStyle: TextStyle(color: textSub, fontSize: 11, fontFamily: 'Inter'),
+                                    isDense: true,
+                                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          InkWell(
+                            onTap: () async {
+                              final String title = _titleController.text.trim().toUpperCase();
+                              final double? target = double.tryParse(_targetController.text);
+                              final int? days = int.tryParse(_daysController.text);
+
+                              if (title.isNotEmpty && target != null && target > 0 && days != null && days > 0) {
+                                final double pace = target / days;
+                                final newGoal = SavingGoal(
+                                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                  title: title,
+                                  target: target,
+                                  current: 0.0,
+                                  deadline: 'WITHIN $days DAYS',
+                                  dailyPaceRequired: pace,
+                                  history: ['[LOG_START] INSTANTIATED REQ OVER $days DAYS.'],
+                                );
+
+                                final updatedList = [...goals, newGoal];
+                                ref.read(savingGoalsProvider.notifier).state = updatedList;
+                                await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
+
+                                _titleController.clear();
+                                _targetController.clear();
+                                _daysController.clear();
+                                setState(() {
+                                  _isCreationFormOpen = false;
+                                });
+                                FocusScope.of(context).unfocus();
+                              }
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              color: textMain,
+                              alignment: Alignment.center,
+                              child: Text(
+                                'ENGAGE STRUCTURAL GOAL',
+                                style: TextStyle(
+                                  color: isDark ? Colors.black : Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-            Expanded(
-              child: goalsList.isEmpty
-                  ? Center(
-                child: Text('NO TRACKED LIQUIDITY POOLS', style: TextStyle(color: textFootnote, fontSize: 12)),
-              )
-                  : ListView.builder(
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                itemCount: goalsList.length,
-                itemBuilder: (context, index) {
-                  final goal = goalsList[index];
-                  final bool isExpandedForDeposit = _selectedPoolIdForDeposit == goal.id;
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Divider(color: specBorderColor, height: 1),
+            ),
 
-                  double progressPercent = goal.target > 0 ? (goal.current / goal.target) : 0.0;
-                  if (progressPercent > 1.0) progressPercent = 1.0;
-                  if (progressPercent < 0.0) progressPercent = 0.0;
+            // GOALS MONITOR STACK
+            Expanded(
+              child: goals.isEmpty
+                  ? Center(child: Text('NO SYSTEM ASSETS ACCOUNTED', style: TextStyle(color: systemTextColor, fontSize: 12, fontFamily: 'Inter')))
+                  : ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                itemCount: goals.length,
+                itemBuilder: (context, index) {
+                  final goal = goals[index];
+                  final bool isExpanded = _expandedGoalId == goal.id;
+                  final double percent = goal.target > 0 ? (goal.current / goal.target).clamp(0.0, 1.0) : 0.0;
 
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 14),
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       border: Border.all(color: specBorderColor, width: 0.8),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedPoolIdForDeposit = isExpandedForDeposit ? null : goal.id;
-                                    _depositController.clear();
-                                  });
-                                },
-                                child: Row(
+                        // MAIN CELL HEADER TRACK
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _expandedGoalId = isExpanded ? null : goal.id;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    AnimatedRotation(
-                                      duration: const Duration(milliseconds: 200),
-                                      turns: isExpandedForDeposit ? 0.25 : 0.0,
-                                      child: Icon(
-                                        Icons.keyboard_arrow_right,
-                                        color: textFootnote,
-                                        size: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         goal.title,
-                                        style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: -0.2),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter'),
                                       ),
+                                    ),
+                                    Text(
+                                      '${(percent * 100).toStringAsFixed(0)}%',
+                                      style: TextStyle(color: accentGreen, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                // BAR PROGRESS STRUCT
+                                Container(
+                                  width: double.infinity,
+                                  height: 3,
+                                  color: isDark ? const Color(0xFF141414) : const Color(0xFFE5E5E5),
+                                  alignment: Alignment.centerLeft,
+                                  child: FractionallySizedBox(
+                                    widthFactor: percent,
+                                    child: Container(color: accentGreen),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '$currency${goal.current.toStringAsFixed(0)} / $currency${goal.target.toStringAsFixed(0)}',
+                                      style: TextStyle(color: textMain, fontSize: 12, fontFamily: 'Inter'),
+                                    ),
+                                    Text(
+                                      'REQ: $currency${goal.dailyPaceRequired.toStringAsFixed(2)}/DAY',
+                                      style: TextStyle(color: systemTextColor, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // DRAWER METRIC EXPANSION
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeInOut,
+                          // FIX: Changed from direct maxHeight parameter to use BoxConstraints layout framework
+                          constraints: BoxConstraints(maxHeight: isExpanded ? 230 : 0),
+                          clipBehavior: Clip.hardEdge,
+                          child: Column(
+                            children: [
+                              Divider(color: specBorderColor, height: 1),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _depositController,
+                                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                        style: TextStyle(color: textMain, fontSize: 13, fontFamily: 'Inter'),
+                                        decoration: InputDecoration(
+                                          hintText: 'DEPOSIT / WITHDRAW AMOUNT',
+                                          hintStyle: TextStyle(color: systemTextColor, fontSize: 11, fontFamily: 'Inter'),
+                                          prefixText: '$currency ',
+                                          prefixStyle: TextStyle(color: textMain, fontSize: 13, fontFamily: 'Inter'),
+                                          isDense: true,
+                                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    IconButton(
+                                      icon: Icon(Icons.add, color: textMain, size: 18),
+                                      onPressed: () async {
+                                        final double? val = double.tryParse(_depositController.text);
+                                        if (val != null && val > 0) {
+                                          final updatedGoal = SavingGoal(
+                                            id: goal.id,
+                                            title: goal.title,
+                                            target: goal.target,
+                                            current: goal.current + val,
+                                            deadline: goal.deadline,
+                                            dailyPaceRequired: goal.dailyPaceRequired,
+                                            history: [...goal.history, '[DEPOSIT] APPENDED +$currency${val.toStringAsFixed(2)}'],
+                                          );
+                                          final updatedList = goals.map((g) => g.id == goal.id ? updatedGoal : g).toList();
+                                          ref.read(savingGoalsProvider.notifier).state = updatedList;
+                                          await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
+                                          _depositController.clear();
+                                          FocusScope.of(context).unfocus();
+                                        }
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.remove, color: textMain, size: 18),
+                                      onPressed: () async {
+                                        final double? val = double.tryParse(_depositController.text);
+                                        if (val != null && val > 0 && (goal.current - val) >= 0) {
+                                          final updatedGoal = SavingGoal(
+                                            id: goal.id,
+                                            title: goal.title,
+                                            target: goal.target,
+                                            current: goal.current - val,
+                                            deadline: goal.deadline,
+                                            dailyPaceRequired: goal.dailyPaceRequired,
+                                            history: [...goal.history, '[WITHDRAW] REDUCED -$currency${val.toStringAsFixed(2)}'],
+                                          );
+                                          final updatedList = goals.map((g) => g.id == goal.id ? updatedGoal : g).toList();
+                                          ref.read(savingGoalsProvider.notifier).state = updatedList;
+                                          await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
+                                          _depositController.clear();
+                                          FocusScope.of(context).unfocus();
+                                        }
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete_outline, color: textMain, size: 18),
+                                      onPressed: () async {
+                                        final updatedList = goals.where((g) => g.id != goal.id).toList();
+                                        ref.read(savingGoalsProvider.notifier).state = updatedList;
+                                        await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
+                                        setState(() {
+                                          _expandedGoalId = null;
+                                        });
+                                      },
                                     ),
                                   ],
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            GestureDetector(
-                              onTap: () async {
-                                final updatedList = goalsList.where((element) => element.id != goal.id).toList();
-                                ref.read(savingGoalsProvider.notifier).state = updatedList;
-                                await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
-                                if (isExpandedForDeposit) {
-                                  _selectedPoolIdForDeposit = null;
-                                }
-                              },
-                              child: Text(
-                                '[CLEAR]',
-                                style: TextStyle(color: alertRed.withOpacity(0.8), fontSize: 10, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'FUNDED: $currency${goal.current.toStringAsFixed(2)}',
-                              style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'CAP: $currency${goal.target.toStringAsFixed(2)}',
-                              style: TextStyle(color: textSub, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Container(
-                              height: 4,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: specBorderColor, width: 0.8),
-                              ),
-                              alignment: Alignment.centerLeft,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 400),
-                                width: constraints.maxWidth * progressPercent,
-                                color: textMain,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 10),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'PACE: $currency${goal.dailyPaceRequired.toStringAsFixed(2)} / DAY',
-                                style: TextStyle(color: textFootnote, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.1),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Text(
-                              'DEADLINE: ${goal.deadline}',
-                              style: TextStyle(color: textFootnote, fontSize: 10, letterSpacing: 0.1),
-                            ),
-                          ],
-                        ),
-
-                        AnimatedCrossFade(
-                          duration: const Duration(milliseconds: 250),
-                          sizeCurve: Curves.easeInOutCubic,
-                          firstCurve: Curves.easeInQuad,
-                          secondCurve: Curves.easeOutQuad,
-                          crossFadeState: isExpandedForDeposit
-                              ? CrossFadeState.showSecond
-                              : CrossFadeState.showFirst,
-                          firstChild: const SizedBox(width: double.infinity),
-                          secondChild: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 16),
-                              Divider(color: specBorderColor, height: 1, thickness: 0.5),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _depositController,
-                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                      style: TextStyle(color: textMain, fontSize: 12),
-                                      decoration: InputDecoration(
-                                        labelText: 'APPEND LIQUIDITY INBOUND',
-                                        labelStyle: TextStyle(color: textFootnote, fontSize: 9),
-                                        prefixText: '$currency ',
-                                        prefixStyle: TextStyle(color: textMain, fontSize: 12),
-                                        isDense: true,
-                                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  InkWell(
-                                    onTap: () async {
-                                      final double? depositAmount = double.tryParse(_depositController.text);
-                                      if (depositAmount != null && depositAmount > 0) {
-                                        final double updatedCurrent = goal.current + depositAmount;
-
-                                        final today = DateTime.now();
-                                        DateTime parsedDead;
-                                        try {
-                                          final components = goal.deadline.split('-');
-                                          parsedDead = DateTime(int.parse(components[0]), int.parse(components[1]), int.parse(components[2]));
-                                        } catch (_) {
-                                          parsedDead = today.add(const Duration(days: 30));
-                                        }
-                                        final difference = parsedDead.difference(today).inDays;
-                                        final remainingDays = difference <= 0 ? 1 : difference;
-
-                                        final double balanceNeeded = goal.target - updatedCurrent;
-                                        final double updatedPace = balanceNeeded <= 0 ? 0.0 : (balanceNeeded / remainingDays);
-
-                                        final String timestampStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-                                        final List<String> updatedHistory = [
-                                          ...goal.history,
-                                          '[$timestampStr] REALLOCATED: +$currency${depositAmount.toStringAsFixed(2)}'
-                                        ];
-
-                                        final updatedGoal = SavingGoal(
-                                          id: goal.id,
-                                          title: goal.title,
-                                          target: goal.target,
-                                          current: updatedCurrent,
-                                          deadline: goal.deadline,
-                                          dailyPaceRequired: updatedPace,
-                                          history: updatedHistory,
-                                        );
-
-                                        final updatedList = goalsList.map((g) => g.id == goal.id ? updatedGoal : g).toList();
-                                        ref.read(savingGoalsProvider.notifier).state = updatedList;
-                                        await ExomicDatabaseEngine.savePools(updatedList.map((e) => e.toMap()).toList());
-
-                                        _depositController.clear();
-                                        FocusScope.of(context).unfocus();
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                      color: textMain,
-                                      child: Text(
-                                        'DEPOSIT',
-                                        style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
                               if (goal.history.isNotEmpty) ...[
-                                const SizedBox(height: 12),
-                                Text('POOL TELEMETRY HISTORY:', style: TextStyle(color: textFootnote, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-                                const SizedBox(height: 6),
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(maxHeight: 70),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
                                   child: Container(
                                     width: double.infinity,
+                                    height: 100,
+                                    padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: isDark ? const Color(0xFF020202) : const Color(0xFFFAF9FA),
                                       border: Border.all(color: specBorderColor, width: 0.5),
                                     ),
                                     child: ListView.builder(
                                       shrinkWrap: true,
-                                      padding: const EdgeInsets.all(6),
+                                      physics: const ClampingScrollPhysics(),
+                                      padding: const EdgeInsets.all(4),
                                       itemCount: goal.history.length,
                                       itemBuilder: (context, hIndex) {
                                         return Padding(

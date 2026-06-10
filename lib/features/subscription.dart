@@ -75,7 +75,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       dialogBackgroundColor: const Color(0xFF050505),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
+          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 12),
           foregroundColor: Colors.white,
         ),
       ),
@@ -91,7 +91,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       dialogBackgroundColor: const Color(0xFFFAFAFA),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, fontSize: 12),
+          textStyle: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.bold, fontSize: 12),
           foregroundColor: Colors.black,
         ),
       ),
@@ -142,145 +142,143 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('SUBSCRIPTION MANAGER', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      border: Border.all(color: specBorderColor, width: 0.8),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('SUBSCRIPTION MANAGER', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  border: Border.all(color: specBorderColor, width: 0.8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      style: TextStyle(color: textMain, fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: 'SUBSCRIPTION NAME',
+                        labelStyle: TextStyle(color: textSub, fontSize: 11),
+                        isDense: true,
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                      ),
                     ),
-                    child: Column(
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _costController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: textMain, fontSize: 14),
+                      decoration: InputDecoration(
+                        labelText: 'MONTHLY OUTFLOW AMOUNT',
+                        labelStyle: TextStyle(color: textSub, fontSize: 11),
+                        prefixText: '$currency ',
+                        prefixStyle: TextStyle(color: textMain, fontSize: 14),
+                        isDense: true,
+                        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Minimalist calendar interface component
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextField(
-                          controller: _titleController,
-                          style: TextStyle(color: textMain, fontSize: 14),
-                          decoration: InputDecoration(
-                            labelText: 'SUBSCRIPTION NAME',
-                            labelStyle: TextStyle(color: textSub, fontSize: 11),
-                            isDense: true,
-                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _costController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          style: TextStyle(color: textMain, fontSize: 14),
-                          decoration: InputDecoration(
-                            labelText: 'MONTHLY OUTFLOW AMOUNT',
-                            labelStyle: TextStyle(color: textSub, fontSize: 11),
-                            prefixText: '$currency ',
-                            prefixStyle: TextStyle(color: textMain, fontSize: 14),
-                            isDense: true,
-                            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Minimalist calendar interface component
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('DUE CYCLE DATE', style: TextStyle(color: textSub, fontSize: 11)),
-                            const SizedBox(height: 4),
-                            GestureDetector(
-                              onTap: () => _pickRenewalDate(context, textMain, isDark),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  border: Border(bottom: BorderSide(color: specBorderColor, width: 1.0)),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      _selectedDate == null
-                                          ? 'SELECT DATE FROM LOG'
-                                          : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                                      style: TextStyle(
-                                          color: _selectedDate == null ? textSub.withOpacity(0.5) : textMain,
-                                          fontSize: 14,
-                                          fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.bold
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.calendar_today_outlined,
-                                      color: textSub,
-                                      size: 14,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 28),
-                        InkWell(
-                          onTap: () async {
-                            final String title = _titleController.text.trim().toUpperCase();
-                            final double? cost = double.tryParse(_costController.text);
-
-                            if (title.isNotEmpty && cost != null && cost > 0 && _selectedDate != null) {
-                              final dateStr = '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
-
-                              final newSub = SubscriptionItem(
-                                id: DateTime.now().microsecondsSinceEpoch.toString(),
-                                title: title,
-                                cost: cost,
-                                renewalDate: dateStr,
-                                isActive: true,
-                              );
-
-                              final updatedList = [...subsList, newSub];
-                              ref.read(subscriptionProvider.notifier).state = updatedList;
-                              await ExomicDatabaseEngine.saveSubscriptions(updatedList.map((e) => e.toMap()).toList());
-
-                              _titleController.clear();
-                              _costController.clear();
-                              setState(() {
-                                _selectedDate = null;
-                              });
-                              FocusScope.of(context).unfocus();
-                            }
-                          },
+                        Text('DUE CYCLE DATE', style: TextStyle(color: textSub, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: () => _pickRenewalDate(context, textMain, isDark),
                           child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            color: textMain,
-                            alignment: Alignment.center,
-                            child: Text(
-                              'COMMIT SERVICE',
-                              style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              border: Border(bottom: BorderSide(color: specBorderColor, width: 1.0)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _selectedDate == null
+                                      ? 'SELECT DATE FROM LOG'
+                                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
+                                  style: TextStyle(
+                                      color: _selectedDate == null ? textSub.withOpacity(0.5) : textMain,
+                                      fontSize: 14,
+                                      fontWeight: _selectedDate == null ? FontWeight.normal : FontWeight.bold
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  color: textSub,
+                                  size: 14,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 28),
+                    InkWell(
+                      onTap: () async {
+                        final String title = _titleController.text.trim().toUpperCase();
+                        final double? cost = double.tryParse(_costController.text);
+
+                        if (title.isNotEmpty && cost != null && cost > 0 && _selectedDate != null) {
+                          final dateStr = '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+
+                          final newSub = SubscriptionItem(
+                            id: DateTime.now().microsecondsSinceEpoch.toString(),
+                            title: title,
+                            cost: cost,
+                            renewalDate: dateStr,
+                            isActive: true,
+                          );
+
+                          final updatedList = [...subsList, newSub];
+                          ref.read(subscriptionProvider.notifier).state = updatedList;
+                          await ExomicDatabaseEngine.saveSubscriptions(updatedList.map((e) => e.toMap()).toList());
+
+                          _titleController.clear();
+                          _costController.clear();
+                          setState(() {
+                            _selectedDate = null;
+                          });
+                          FocusScope.of(context).unfocus();
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        color: textMain,
+                        alignment: Alignment.center,
+                        child: Text(
+                          'COMMIT SERVICE',
+                          style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: subsList.isEmpty
-                  ? Center(
-                child: Text('NO SYSTEM SUBSCRIPTIONS', style: TextStyle(color: textSub, fontSize: 12)),
+              const SizedBox(height: 24),
+              subsList.isEmpty
+                  ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Center(
+                  child: Text('NO SYSTEM SUBSCRIPTIONS', style: TextStyle(color: textSub, fontSize: 12)),
+                ),
               )
                   : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: subsList.length,
                 itemBuilder: (context, index) {
                   final sub = subsList[index];
@@ -354,8 +352,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   );
                 },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

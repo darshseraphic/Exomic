@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/database.dart'; // Ensure correct database import path
 
-// Global state providers for configuration management
-final settingsThemeModeProvider = StateProvider<bool>((ref) => true);
+// Global state providers with persistent initialization
+final settingsThemeModeProvider = StateProvider<bool>((ref) {
+  return ExomicDatabaseEngine.getThemeMode();
+});
 final currencyProvider = StateProvider<String>((ref) => '\$');
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -48,7 +51,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     final bgColor = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFFAFAFA);
-    final borderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
 
     showDialog(
       context: context,
@@ -98,15 +100,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Text('// CONFIG_PANEL', style: TextStyle(color: textSub, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Courier')),
               const SizedBox(height: 24),
 
-              // THEME INTERFACE RULE (OPTIMIZED MUTATION)
+              // THEME INTERFACE RULE (WITH PERSISTENT MUTATION)
               _buildActionTile(
                 label: 'UI_THEME_MODE',
                 valueText: isDark ? '[ DARK ]' : '[ LIGHT ]',
                 borderColor: borderColor,
                 textMain: textMain,
-                onTap: () {
-                  // Direct state assignment executes pipeline redraws immediately
-                  ref.read(settingsThemeModeProvider.notifier).state = !isDark;
+                onTap: () async {
+                  final newTheme = !isDark;
+                  ref.read(settingsThemeModeProvider.notifier).state = newTheme;
+                  await ExomicDatabaseEngine.saveThemeMode(newTheme);
                 },
               ),
               const SizedBox(height: 12),
@@ -215,13 +218,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const Spacer(),
 
-              // SYSTEM FOOTER BOUNDARY
+              // SYSTEM FOOTER BOUNDARY - MOVED TO CENTER & RENAMED
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(border: Border(top: BorderSide(color: borderColor, width: 0.8))),
                 child: Text(
-                  'SYS_VER: 1.1.0 // CACHE: ACTV // CRYPTO: IDLE',
+                  'BUILD BY DARSHSERAPHIC',
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: textSub, fontSize: 10, letterSpacing: 0.5, fontWeight: FontWeight.bold, fontFamily: 'Courier'),
                 ),
               ),
@@ -260,9 +264,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-// -----------------------------------------------------------------------------
-// MINIMAL SYSTEM DOCUMENTATION SCREEN
-// -----------------------------------------------------------------------------
 class SystemDocumentScreen extends StatelessWidget {
   final String title;
   final String content;
@@ -275,12 +276,56 @@ class SystemDocumentScreen extends StatelessWidget {
     required this.isDark,
   });
 
+  // Dynamically parses the raw config content to make headlines bold and body free-flowing
+  Widget _buildParsedContent(String documentText, Color textMain, Color textSub) {
+    final sections = documentText.split('\n\n');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: sections.map((section) {
+        final lines = section.split('\n');
+        if (lines.isEmpty) return const SizedBox.shrink();
+
+        final headline = lines[0];
+        final bodyText = lines.skip(1).join('\n');
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                headline,
+                style: TextStyle(
+                  color: textMain,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Courier',
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                bodyText,
+                style: TextStyle(
+                  color: textSub,
+                  fontSize: 11,
+                  height: 1.6,
+                  fontFamily: 'Courier',
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF999999) : const Color(0xFF444444);
     final bgColor = isDark ? const Color(0xFF050505) : const Color(0xFFFAFAFA);
-    final borderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -309,22 +354,12 @@ class SystemDocumentScreen extends StatelessWidget {
                 '// $title',
                 style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Courier'),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              // FIX: Removed borders and boxes to make structural information flow free
               Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    border: Border.all(color: borderColor, width: 0.8),
-                  ),
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Text(
-                      content,
-                      style: TextStyle(color: textSub, fontSize: 11, height: 1.6, letterSpacing: 0.2, fontFamily: 'Courier'),
-                    ),
-                  ),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: _buildParsedContent(content, textMain, textSub),
                 ),
               ),
             ],

@@ -15,14 +15,15 @@ class ExomicNavbarShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentTab = ref.watch(navigationIndexProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // FIX: Make this dynamic so it adapts perfectly to both light and dark themes
+    // Explicitly watch the global theme provider to trigger instant structural frame paints
+    final isDark = ref.watch(settingsThemeModeProvider);
+
+    // Dynamic color properties based on active UI theme state
     final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final activeColor = isDark ? Colors.white : Colors.black;
     final inactiveColor = isDark ? const Color(0xFF4A4A4A) : const Color(0xFFB5B5B5);
-    // Synced perfectly to match your exact scaffold background specifications
-    final barBackgroundColor = isDark ? const Color(0xFF050505) : const Color(0xFFF9F9F9);
+    final barBackgroundColor = isDark ? const Color(0xFF050505) : const Color(0xFFFAFAFA);
 
     // Primary mobile viewport stack arrays linking exact code files
     final List<Widget> mobileViewports = [
@@ -34,16 +35,20 @@ class ExomicNavbarShell extends ConsumerWidget {
     ];
 
     return Scaffold(
-      // FIX: Changed from Colors.transparent to inherit the theme's background color
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: IndexedStack(
-        index: currentTab,
-        children: mobileViewports,
+      // Wrapped IndexedStack in a SafeArea to dynamically shield all tabs from the top notch
+      body: SafeArea(
+        top: true,
+        bottom: false, // Kept false because the bottom navbar already uses its own SafeArea below
+        child: IndexedStack(
+          index: currentTab,
+          children: mobileViewports,
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: barBackgroundColor,
-          border: Border( // Removed const since specBorderColor is now dynamic
+          border: Border(
             top: BorderSide(color: specBorderColor, width: 0.8),
           ),
         ),
