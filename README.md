@@ -2,6 +2,22 @@
 
 ### 1. VISION, STRATEGIC TAXONOMY, AND PARADIGM SHIFTS
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7200467c-a749-4910-8458-b227141903eb" alt="Expense - light" width="19%" />
+  <img src="https://github.com/user-attachments/assets/d4f68979-6448-4b29-ae0b-43c3cf203be5" alt="Subscription - light" width="19%" />
+  <img src="https://github.com/user-attachments/assets/d3d5c581-af4c-45ad-b41a-3dde5b3b11ca" alt="Saving - light" width="19%" />
+  <img src="https://github.com/user-attachments/assets/fe288ea2-f9cd-46ff-8bdd-e37f3bba10f4" alt="Budget - light" width="19%" />
+  <img src="https://github.com/user-attachments/assets/919ff27e-d2c1-4dc2-9cfc-d5bb40a5dcbd" alt="Setting - light" width="19%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7d5aa42d-eff4-4f23-bf24-493559c799ee" alt="Expense - dark" width="19%" />
+  <img src="https://github.com/user-attachments/assets/d6e150f0-ac0f-4732-8a92-8b5950fbcf8b" alt="Subscription - dark" width="19%" />
+  <img src="https://github.com/user-attachments/assets/059ce509-56b7-4124-a5c4-6f29fcb842f1" alt="Saving - dark" width="19%" />
+  <img src="https://github.com/user-attachments/assets/fc4dc9b2-4b91-4f65-880f-14aaa6ee107a" alt="Budget - dark" width="19%" />
+  <img src="https://github.com/user-attachments/assets/04fa01d0-62ef-4aa0-a7d3-45d44b0bc930" alt="Setting - dark" width="19%" />
+</p>
+
 #### 1.1 The Privacy-First Offline Ideology
 
 The Exomic Ledger Engine is built on a simple rule: financial confidentiality should be absolute. Most consumer financial apps rely on a cloud-based server infrastructure. When a user tracks a transaction, updates an asset pool, or logs a subscription, that data travels across network protocols to be stored on remote servers. This setup introduces several security risks, such as man-in-the-middle exploits, server-side data breaches, and tracking by advertising platforms.
