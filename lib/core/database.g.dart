@@ -47,9 +47,9 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is ExpenseModelAdapter &&
-              runtimeType == other.runtimeType &&
-              typeId == other.typeId;
+      other is ExpenseModelAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }
 
 class SubscriptionModelAdapter extends TypeAdapter<SubscriptionModel> {
@@ -93,9 +93,9 @@ class SubscriptionModelAdapter extends TypeAdapter<SubscriptionModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is SubscriptionModelAdapter &&
-              runtimeType == other.runtimeType &&
-              typeId == other.typeId;
+      other is SubscriptionModelAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }
 
 class SavingGoalModelAdapter extends TypeAdapter<SavingGoalModel> {
@@ -115,13 +115,14 @@ class SavingGoalModelAdapter extends TypeAdapter<SavingGoalModel> {
       current: fields[3] as double,
       deadline: fields[4] as String,
       dailyPaceRequired: fields[5] as double,
+      history: (fields[6] as List?)?.cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, SavingGoalModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -133,7 +134,9 @@ class SavingGoalModelAdapter extends TypeAdapter<SavingGoalModel> {
       ..writeByte(4)
       ..write(obj.deadline)
       ..writeByte(5)
-      ..write(obj.dailyPaceRequired);
+      ..write(obj.dailyPaceRequired)
+      ..writeByte(6)
+      ..write(obj.history);
   }
 
   @override
@@ -142,9 +145,9 @@ class SavingGoalModelAdapter extends TypeAdapter<SavingGoalModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is SavingGoalModelAdapter &&
-              runtimeType == other.runtimeType &&
-              typeId == other.typeId;
+      other is SavingGoalModelAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }
 
 class BudgetLimitModelAdapter extends TypeAdapter<BudgetLimitModel> {
@@ -182,7 +185,7 @@ class BudgetLimitModelAdapter extends TypeAdapter<BudgetLimitModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is BudgetLimitModelAdapter &&
-              runtimeType == other.runtimeType &&
-              typeId == other.typeId;
+      other is BudgetLimitModelAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
 }

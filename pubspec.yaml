@@ -21,9 +21,15 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   hive_generator: ^2.0.1
   build_runner: ^2.4.9
+  # 1. ADD THIS TOOL TO YOUR DEV_DEPENDENCIES:
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+
+  # Registered custom application branding assets
+  assets:
+    - assets/logo.png
 
   # Ensure the Neo-Grotesque Inter font variants are explicitly mapped
   fonts:
@@ -34,3 +40,12 @@ flutter:
           weight: 700
         - asset: assets/fonts/Inter-Black.ttf
           weight: 900
+
+# 2. ADD THIS CONFIGURATION BLOCK AT THE BOTTOM OF THE FILE:
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
+  # Optional: For Android 8.0+ adaptive icon support (clean monochrome style)
+  adaptive_icon_background: "#050505" # Matches your dark screen background
+  adaptive_icon_foreground: "assets/logo.png"

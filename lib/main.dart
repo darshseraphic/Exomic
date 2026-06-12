@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/database.dart';
 import 'navbar.dart';
 import 'features/settings.dart';
+import 'splash.dart'; // Imported your new splash screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,7 +94,8 @@ class ExomicAppRoot extends ConsumerWidget {
         ),
       ),
 
-      home: const ExomicNavbarShell(),
+      // Hooked the app to start with the custom Splash Screen
+      home: const SplashScreen(),
     );
   }
 }
