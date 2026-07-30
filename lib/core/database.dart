@@ -123,7 +123,6 @@ class ExomicDatabaseEngine {
   static Box<BudgetLimitModel> get budgetBox => Hive.box<BudgetLimitModel>(budgetBoxName);
   static Box get settingsBox => Hive.box(settingsBoxName);
 
-  // --- PERSISTENT CONFIG MANAGEMENT ---
   static bool getThemeMode() {
     return settingsBox.get('is_dark_mode', defaultValue: true) as bool;
   }
@@ -174,8 +173,6 @@ class ExomicDatabaseEngine {
   static Future<void> saveSubscriptions(List<Map<String, dynamic>> serializedList) async {
     await settingsBox.put('flexible_subscription_stream', serializedList);
   }
-
-  // FIXED: Pull directly from the strongly-typed savingsBox instead of the legacy string
   static List<Map<String, dynamic>> getPools() {
     final items = savingsBox.values.toList();
     return items.map((e) => {
@@ -189,7 +186,6 @@ class ExomicDatabaseEngine {
     }).toList();
   }
 
-  // FIXED: Route legacy savePools calls to update the natively typed savingsBox
   static Future<void> savePools(List<Map<String, dynamic>> serializedList) async {
     await savingsBox.clear();
     for (var map in serializedList) {
