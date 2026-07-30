@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/database.dart';
-import 'navbar.dart';
 import 'features/settings.dart';
 import 'splash.dart'; // Imported your new splash screen
 
