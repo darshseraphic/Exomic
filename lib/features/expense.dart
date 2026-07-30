@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database.dart';
-import 'settings.dart'; // Import to link with global settings state triggers
+import 'settings.dart';
 
 class AnimatedRollingCounter extends ConsumerStatefulWidget {
   final double value;
   final TextStyle style;
-  const AnimatedRollingCounter({super.key, required this.value, required this.style});
+  const AnimatedRollingCounter(
+      {super.key, required this.value, required this.style});
 
   @override
-  ConsumerState<AnimatedRollingCounter> createState() => _AnimatedRollingCounterState();
+  ConsumerState<AnimatedRollingCounter> createState() =>
+      _AnimatedRollingCounterState();
 }
 
-class _AnimatedRollingCounterState extends ConsumerState<AnimatedRollingCounter> with SingleTickerProviderStateMixin {
+class _AnimatedRollingCounterState extends ConsumerState<AnimatedRollingCounter>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Tween<double> _tween;
   late Animation<double> _animation;
@@ -22,7 +25,8 @@ class _AnimatedRollingCounterState extends ConsumerState<AnimatedRollingCounter>
   void initState() {
     super.initState();
     _oldValue = widget.value;
-    _controller = AnimationController(duration: const Duration(milliseconds: 800), vsync: this);
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 800), vsync: this);
     _tween = Tween<double>(begin: _oldValue, end: widget.value);
     _animation = _controller.drive(_tween);
     _controller.forward();
@@ -51,7 +55,8 @@ class _AnimatedRollingCounterState extends ConsumerState<AnimatedRollingCounter>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        return Text('$currency${_animation.value.toStringAsFixed(2)}', style: widget.style);
+        return Text('$currency${_animation.value.toStringAsFixed(2)}',
+            style: widget.style);
       },
     );
   }
@@ -62,35 +67,39 @@ class ExpenseItem {
   final String description;
   final String category;
   final double amount;
-  const ExpenseItem({required this.timestamp, required this.description, required this.category, required this.amount});
+  const ExpenseItem(
+      {required this.timestamp,
+      required this.description,
+      required this.category,
+      required this.amount});
 
   Map<String, dynamic> toMap() => {
-    'timestamp': timestamp,
-    'description': description,
-    'category': category,
-    'amount': amount,
-  };
+        'timestamp': timestamp,
+        'description': description,
+        'category': category,
+        'amount': amount,
+      };
 
   factory ExpenseItem.fromMap(Map<dynamic, dynamic> map) => ExpenseItem(
-    timestamp: map['timestamp'] ?? '',
-    description: map['description'] ?? '',
-    category: map['category'] ?? '',
-    amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
-  );
+        timestamp: map['timestamp'] ?? '',
+        description: map['description'] ?? '',
+        category: map['category'] ?? '',
+        amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      );
 }
 
-final incomeProvider = StateProvider<double>((ref) => ExomicDatabaseEngine.getIncome());
+final incomeProvider =
+    StateProvider<double>((ref) => ExomicDatabaseEngine.getIncome());
 
 final ledgerStreamProvider = StateProvider<List<ExpenseItem>>((ref) {
-  // 1. Fetch persistent standard transaction logs from database engine
   final rawList = ExomicDatabaseEngine.getHistory();
-  final List<ExpenseItem> expenses = rawList.map((item) => ExpenseItem.fromMap(item as Map)).toList();
-
-  // 2. Fetch and parse incremental deposit logs from asset pools
+  final List<ExpenseItem> expenses =
+      rawList.map((item) => ExpenseItem.fromMap(item as Map)).toList();
   try {
     final pools = ExomicDatabaseEngine.getPools();
     final now = DateTime.now();
-    final datePrefix = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final datePrefix =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
 
     for (var pool in pools) {
       final String title = pool['title'] ?? 'SAVINGS POOL';
@@ -101,14 +110,12 @@ final ledgerStreamProvider = StateProvider<List<ExpenseItem>>((ref) {
           if (entry is String && entry.contains('+')) {
             final parts = entry.split('+');
             if (parts.length > 1) {
-              // Extract numeric value safely ignoring any localized symbols
               final amtStr = parts[1].replaceAll(RegExp(r'[^\d.]'), '');
               final amt = double.tryParse(amtStr) ?? 0.0;
-
               if (amt > 0) {
-                // Extract timestamp signature [HH:MM] from deposit log
                 String timePart = "00:00";
-                final timeMatch = RegExp(r'\[(\d{2}:\d{2})\]').firstMatch(entry);
+                final timeMatch =
+                    RegExp(r'\[(\d{2}:\d{2})\]').firstMatch(entry);
                 if (timeMatch != null) {
                   timePart = timeMatch.group(1)!;
                 }
@@ -125,11 +132,7 @@ final ledgerStreamProvider = StateProvider<List<ExpenseItem>>((ref) {
         }
       }
     }
-  } catch (_) {
-    // Graceful fallback if pool streams are uninitialized or mismatch formats
-  }
-
-  // 3. Sort chronologically by timestamp descending to place the newest events first
+  } catch (_) {}
   expenses.sort((a, b) => b.timestamp.compareTo(a.timestamp));
   return expenses;
 });
@@ -147,7 +150,12 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
 
   String _selectedCategory = 'INFRASTRUCTURE';
   bool _isCategoryDropdownOpen = false;
-  final List<String> _categories = ['INFRASTRUCTURE', 'HARDWARE', 'OPERATIONS', 'LIFESTYLE'];
+  final List<String> _categories = [
+    'INFRASTRUCTURE',
+    'HARDWARE',
+    'OPERATIONS',
+    'LIFESTYLE'
+  ];
 
   @override
   void dispose() {
@@ -158,7 +166,8 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
   }
 
   void _submitIncome() async {
-    double parsed = double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0.0;
+    double parsed =
+        double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0.0;
     if (parsed > 0) {
       ref.read(incomeProvider.notifier).state = parsed;
       await ExomicDatabaseEngine.saveIncome(parsed);
@@ -170,26 +179,23 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
   Widget build(BuildContext context) {
     final originalIncome = ref.watch(incomeProvider);
     final history = ref.watch(ledgerStreamProvider);
-
-    // Direct observations to achieve instantaneous theme and currency updates
     final isDark = ref.watch(settingsThemeModeProvider);
     final currency = ref.watch(currencyProvider);
-
-    final specBorderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
+    final specBorderColor =
+        isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
     final textMain = isDark ? Colors.white : Colors.black;
-    final systemTextColor = isDark ? const Color(0xFFF5F3F4) : const Color(0xFF4A4A4A);
+    final systemTextColor =
+        isDark ? const Color(0xFFF5F3F4) : const Color(0xFF4A4A4A);
     const alertRed = Color(0xFFE63946);
 
-    // Synchronize text field input value when data exists out of engine
     if (_incomeController.text.isEmpty && originalIncome > 0) {
       _incomeController.text = originalIncome.toStringAsFixed(2);
     }
 
-    // Calculate current month token signature
     final DateTime nowTime = DateTime.now();
-    final String currentMonthSignature = "${nowTime.year}-${nowTime.month.toString().padLeft(2, '0')}";
+    final String currentMonthSignature =
+        "${nowTime.year}-${nowTime.month.toString().padLeft(2, '0')}";
 
-    // Only compute dynamic deductions if the item falls within the active current month
     double currentMonthDeductions = history.where((item) {
       return item.timestamp.startsWith(currentMonthSignature);
     }).fold(0.0, (sum, item) => sum + item.amount);
@@ -211,37 +217,57 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('FINANCIAL LEDGER', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+              Text('FINANCIAL LEDGER',
+                  style: TextStyle(
+                      color: systemTextColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0)),
               const SizedBox(height: 20),
-
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                     color: Colors.transparent,
-                    border: Border.all(color: specBorderColor, width: 0.8)
-                ),
+                    border: Border.all(color: specBorderColor, width: 0.8)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('MONTHLY INCOME', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text('MONTHLY INCOME',
+                        style: TextStyle(
+                            color: systemTextColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: _incomeController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: TextStyle(color: textMain, fontSize: 18, fontWeight: FontWeight.normal, fontFamily: 'Inter'),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            style: TextStyle(
+                                color: textMain,
+                                fontSize: 18,
+                                fontWeight: FontWeight.normal,
+                                fontFamily: 'Inter'),
                             onSubmitted: (_) => _submitIncome(),
                             decoration: InputDecoration(
                               hintText: '0.00',
-                              hintStyle: TextStyle(color: systemTextColor.withOpacity(0.3)),
+                              hintStyle: TextStyle(
+                                  color: systemTextColor.withOpacity(0.3)),
                               prefixText: '$currency ',
-                              prefixStyle: TextStyle(color: textMain, fontSize: 18, fontWeight: FontWeight.normal),
+                              prefixStyle: TextStyle(
+                                  color: textMain,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.normal),
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 8),
+                              enabledBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: specBorderColor)),
+                              focusedBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: textMain)),
                             ),
                           ),
                         ),
@@ -250,12 +276,20 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                           InkWell(
                             onTap: _submitIncome,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
-                                  color: isDark ? Colors.transparent : Colors.white,
-                                  border: Border.all(color: textMain, width: 0.8)
-                              ),
-                              child: Text('OK', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  color: isDark
+                                      ? Colors.transparent
+                                      : Colors.white,
+                                  border:
+                                      Border.all(color: textMain, width: 0.8)),
+                              child: Text('OK',
+                                  style: TextStyle(
+                                      color:
+                                          isDark ? Colors.white : Colors.black,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold)),
                             ),
                           )
                         ]
@@ -266,7 +300,11 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('RUNNING BALANCE', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                          Text('RUNNING BALANCE',
+                              style: TextStyle(
+                                  color: systemTextColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold)),
                           GestureDetector(
                             onTap: () async {
                               ref.read(incomeProvider.notifier).state = 0.0;
@@ -275,7 +313,10 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                             },
                             child: const Text(
                               '[RESET]',
-                              style: TextStyle(color: alertRed, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: alertRed,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -283,35 +324,54 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                       const SizedBox(height: 4),
                       AnimatedRollingCounter(
                         value: dynamicRemainingBalance,
-                        style: TextStyle(color: textMain, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                        style: TextStyle(
+                            color: textMain,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5),
                       ),
                     ]
                   ],
                 ),
               ),
-
               if (originalIncome > 0) ...[
                 const SizedBox(height: 24),
-                Text('NEW TRANSACTION', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text('NEW TRANSACTION',
+                    style: TextStyle(
+                        color: systemTextColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(color: Colors.transparent, border: Border.all(color: specBorderColor, width: 0.8)),
+                  decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border.all(color: specBorderColor, width: 0.8)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextField(
                         controller: _amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.normal),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        style: TextStyle(
+                            color: textMain,
+                            fontSize: 14,
+                            fontWeight: FontWeight.normal),
                         decoration: InputDecoration(
                           labelText: 'AMOUNT',
-                          labelStyle: TextStyle(color: systemTextColor, fontSize: 12),
+                          labelStyle:
+                              TextStyle(color: systemTextColor, fontSize: 12),
                           prefixText: '$currency ',
-                          prefixStyle: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.normal),
+                          prefixStyle: TextStyle(
+                              color: textMain,
+                              fontSize: 14,
+                              fontWeight: FontWeight.normal),
                           isDense: true,
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                          enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: specBorderColor)),
+                          focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: textMain)),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -320,33 +380,48 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                         style: TextStyle(color: textMain, fontSize: 14),
                         decoration: InputDecoration(
                           labelText: 'DESCRIPTION',
-                          labelStyle: TextStyle(color: systemTextColor, fontSize: 12),
+                          labelStyle:
+                              TextStyle(color: systemTextColor, fontSize: 12),
                           isDense: true,
-                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: specBorderColor)),
-                          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: textMain)),
+                          enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: specBorderColor)),
+                          focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: textMain)),
                         ),
                       ),
                       const SizedBox(height: 16),
-
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('CATEGORY', style: TextStyle(color: systemTextColor, fontSize: 11)),
+                          Text('CATEGORY',
+                              style: TextStyle(
+                                  color: systemTextColor, fontSize: 11)),
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                _isCategoryDropdownOpen = !_isCategoryDropdownOpen;
+                                _isCategoryDropdownOpen =
+                                    !_isCategoryDropdownOpen;
                               });
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                border: Border(bottom: BorderSide(color: _isCategoryDropdownOpen ? textMain : specBorderColor, width: 1.0)),
+                                border: Border(
+                                    bottom: BorderSide(
+                                        color: _isCategoryDropdownOpen
+                                            ? textMain
+                                            : specBorderColor,
+                                        width: 1.0)),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(_selectedCategory, style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold)),
+                                  Text(_selectedCategory,
+                                      style: TextStyle(
+                                          color: textMain,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold)),
                                   AnimatedRotation(
                                     turns: _isCategoryDropdownOpen ? 0.5 : 0.0,
                                     duration: const Duration(milliseconds: 250),
@@ -367,72 +442,86 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                             alignment: Alignment.topCenter,
                             child: _isCategoryDropdownOpen
                                 ? Container(
-                              margin: const EdgeInsets.only(top: 4),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  left: BorderSide(color: specBorderColor, width: 0.8),
-                                  right: BorderSide(color: specBorderColor, width: 0.8),
-                                  bottom: BorderSide(color: specBorderColor, width: 0.8),
-                                ),
-                                color: Colors.transparent,
-                              ),
-                              child: Column(
-                                children: _categories.map((category) {
-                                  final isSelected = category == _selectedCategory;
-                                  return InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedCategory = category;
-                                        _isCategoryDropdownOpen = false;
-                                      });
-                                    },
-                                    child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                      color: isSelected ? textMain.withOpacity(0.05) : Colors.transparent,
-                                      child: Text(
-                                        category,
-                                        style: TextStyle(
-                                            color: textMain,
-                                            fontSize: 13,
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
-                                        ),
+                                    margin: const EdgeInsets.only(top: 4),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        left: BorderSide(
+                                            color: specBorderColor, width: 0.8),
+                                        right: BorderSide(
+                                            color: specBorderColor, width: 0.8),
+                                        bottom: BorderSide(
+                                            color: specBorderColor, width: 0.8),
                                       ),
+                                      color: Colors.transparent,
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                            )
-                                : const SizedBox(width: double.infinity, height: 0),
+                                    child: Column(
+                                      children: _categories.map((category) {
+                                        final isSelected =
+                                            category == _selectedCategory;
+                                        return InkWell(
+                                          onTap: () {
+                                            setState(() {
+                                              _selectedCategory = category;
+                                              _isCategoryDropdownOpen = false;
+                                            });
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                                milliseconds: 200),
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 12, horizontal: 16),
+                                            color: isSelected
+                                                ? textMain.withOpacity(0.05)
+                                                : Colors.transparent,
+                                            child: Text(
+                                              category,
+                                              style: TextStyle(
+                                                  color: textMain,
+                                                  fontSize: 13,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal),
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    width: double.infinity, height: 0),
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 24),
                       InkWell(
                         onTap: () async {
-                          double amt = double.tryParse(_amountController.text) ?? 0.0;
+                          double amt =
+                              double.tryParse(_amountController.text) ?? 0.0;
                           String desc = _descController.text.trim();
                           if (amt > 0 && desc.isNotEmpty) {
                             final now = DateTime.now();
-                            final timeStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+                            final timeStr =
+                                '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
                             final updatedItem = ExpenseItem(
                                 timestamp: timeStr,
                                 description: desc.toUpperCase(),
                                 category: _selectedCategory,
-                                amount: amt
-                            );
+                                amount: amt);
 
                             final currentList = ref.read(ledgerStreamProvider);
                             final newList = [updatedItem, ...currentList];
 
-                            ref.read(ledgerStreamProvider.notifier).state = newList;
+                            ref.read(ledgerStreamProvider.notifier).state =
+                                newList;
 
-                            // Filter out dynamic 'SAVINGS' logs before saving history into expenseBox to avoid database corruption or duplicate logs
-                            final serializableList = newList.where((e) => e.category != 'SAVINGS').map((e) => e.toMap()).toList();
-                            await ExomicDatabaseEngine.saveHistory(serializableList);
+                            final serializableList = newList
+                                .where((e) => e.category != 'SAVINGS')
+                                .map((e) => e.toMap())
+                                .toList();
+                            await ExomicDatabaseEngine.saveHistory(
+                                serializableList);
 
                             _amountController.clear();
                             _descController.clear();
@@ -449,7 +538,11 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                           alignment: Alignment.center,
                           child: Text(
                             'COMMIT',
-                            style: TextStyle(color: isDark ? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                            style: TextStyle(
+                                color: isDark ? Colors.black : Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5),
                           ),
                         ),
                       ),
@@ -457,46 +550,69 @@ class _ExpenseLogScreenState extends ConsumerState<ExpenseLogScreen> {
                   ),
                 ),
               ],
-
               const SizedBox(height: 32),
               Center(
-                child: Text('TRANSACTION HISTORY', style: TextStyle(color: systemTextColor, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+                child: Text('TRANSACTION HISTORY',
+                    style: TextStyle(
+                        color: systemTextColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0)),
               ),
               const SizedBox(height: 16),
-
               if (history.isEmpty)
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text('NO TRANSACTIONS', style: TextStyle(color: systemTextColor, fontSize: 12)),
+                    child: Text('NO TRANSACTIONS',
+                        style: TextStyle(color: systemTextColor, fontSize: 12)),
                   ),
                 ),
-
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: history.length,
                 itemBuilder: (context, index) {
                   final item = history[index];
-                  final displayTime = item.timestamp.contains(' ') ? item.timestamp.split(' ')[1] : item.timestamp;
+                  final displayTime = item.timestamp.contains(' ')
+                      ? item.timestamp.split(' ')[1]
+                      : item.timestamp;
                   return Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: specBorderColor, width: 0.5))),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    decoration: BoxDecoration(
+                        border: Border(
+                            bottom: BorderSide(
+                                color: specBorderColor, width: 0.5))),
                     child: Row(
                       children: [
-                        Text('[$displayTime]', style: TextStyle(color: systemTextColor, fontSize: 12)),
+                        Text('[$displayTime]',
+                            style: TextStyle(
+                                color: systemTextColor, fontSize: 12)),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.description, style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold)),
+                              Text(item.description,
+                                  style: TextStyle(
+                                      color: textMain,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold)),
                               const SizedBox(height: 2),
-                              Text(item.category, style: TextStyle(color: systemTextColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                              Text(item.category,
+                                  style: TextStyle(
+                                      color: systemTextColor,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
-                        Text('-$currency${item.amount.toStringAsFixed(2)}', style: TextStyle(color: textMain, fontSize: 15, fontWeight: FontWeight.bold)),
+                        Text('-$currency${item.amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                                color: textMain,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold)),
                       ],
                     ),
                   );
