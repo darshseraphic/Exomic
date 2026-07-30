@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/database.dart'; // Ensure correct database import path
+import '../core/database.dart';
 
-// Global state providers with persistent initialization
 final settingsThemeModeProvider = StateProvider<bool>((ref) {
   return ExomicDatabaseEngine.getThemeMode();
 });
@@ -40,8 +39,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeInOutQuart;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          return SlideTransition(position: animation.drive(tween), child: child);
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+              position: animation.drive(tween), child: child);
         },
       ),
     );
@@ -51,7 +52,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     final bgColor = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFFAFAFA);
-    final borderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
+    final borderColor =
+        isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
 
     showDialog(
       context: context,
@@ -71,12 +73,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 Text(
                   'NOTICE',
-                  style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Inter', letterSpacing: 0.5),
+                  style: TextStyle(
+                      color: textMain,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'This module is currently under active development. Future firmware releases are required to unlock external networking capabilities.',
-                  style: TextStyle(color: textSub, fontSize: 13, fontFamily: 'Inter', height: 1.4),
+                  style: TextStyle(
+                      color: textSub,
+                      fontSize: 13,
+                      fontFamily: 'Inter',
+                      height: 1.4),
                 ),
                 const SizedBox(height: 24),
                 Align(
@@ -87,7 +98,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         '[ OK ]',
-                        style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                        style: TextStyle(
+                            color: textMain,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter'),
                       ),
                     ),
                   ),
@@ -106,12 +121,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final textMain = isDark ? Colors.white : Colors.black;
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
-    final systemTextColor = isDark ? const Color(0xFF737373) : const Color(0xFF525252);
+    final systemTextColor =
+        isDark ? const Color(0xFF737373) : const Color(0xFF525252);
     final screenBg = isDark ? const Color(0xFF050505) : const Color(0xFFFAFAFA);
-    final borderColor = isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
+    final borderColor =
+        isDark ? const Color(0xFF191919) : const Color(0xFFE5E5E5);
 
     return Theme(
-      // FIX: Override text selection handles (violet/blue pin) to match custom monochrome aesthetic
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: textMain,
@@ -122,15 +138,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Scaffold(
         backgroundColor: screenBg,
         body: SafeArea(
-          // ... inside your _SettingsScreenState build method
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('SETTINGS', style: TextStyle(color: textMain, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')), // <--- Updated to dynamic white/black textMain
+                Text('SETTINGS',
+                    style: TextStyle(
+                        color: textMain,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        fontFamily:
+                            'Inter')), // <--- Updated to dynamic white/black textMain
                 const SizedBox(height: 24),
-                // THEME INTERFACE RULE (WITH PERSISTENT MUTATION)
                 _buildActionTile(
                   label: 'UI THEME MODE',
                   valueText: isDark ? '[ DARK ]' : '[ LIGHT ]',
@@ -138,15 +160,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   textMain: textMain,
                   onTap: () async {
                     final newTheme = !isDark;
-                    ref.read(settingsThemeModeProvider.notifier).state = newTheme;
+                    ref.read(settingsThemeModeProvider.notifier).state =
+                        newTheme;
                     await ExomicDatabaseEngine.saveThemeMode(newTheme);
                   },
                 ),
                 const SizedBox(height: 12),
 
-                // CURRENCY CONTROLLER MATRIX
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     border: Border.all(color: borderColor, width: 0.8),
@@ -154,14 +177,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text('GLOBAL CURRENCY', style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter')),
+                        child: Text('GLOBAL CURRENCY',
+                            style: TextStyle(
+                                color: textMain,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.2,
+                                fontFamily: 'Inter')),
                       ),
                       SizedBox(
                         width: 60,
                         child: TextField(
                           controller: _currencyController,
                           textAlign: TextAlign.right,
-                          style: TextStyle(color: textMain, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                          style: TextStyle(
+                              color: textMain,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Inter'),
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             isDense: true,
@@ -178,7 +211,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
 
                 const SizedBox(height: 32),
-                Text('LOCAL DOCS', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')),
+                Text('LOCAL DOCS',
+                    style: TextStyle(
+                        color: systemTextColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        fontFamily: 'Inter')),
                 const SizedBox(height: 16),
 
                 _buildActionTile(
@@ -190,7 +229,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     context,
                     SystemDocumentScreen(
                       title: 'PRIVACY POLICY',
-                      content: '1. TELEMETRY SCOPE & ISOLATION\nAll operations, tracking parameters, liquid assets, and computational balance data are recorded exclusively inside isolated client environments. This application operates inside a completely decentralized sandbox. No external synchronization hooks exist to bridge your input data to a broader network.\n\n2. NETWORK DISCONNECT GUARANTEE\nThis architecture guarantees offline-first operational parameters. Your transaction history, subscription tokens, category limits, and goal trackers are never shared with developer endpoints, analytic channels, or third-party marketing services.\n\n3. RIGHT TO PURGE\nData sovereignty belongs to the active user. You hold explicit rights to force-wipe all matrices instantly. Standard uninstallation of the software package physically obliterates the core Hive database vectors, permanently erasing your operational imprint from the device memory blocks.',
+                      content:
+                          '1. TELEMETRY SCOPE & ISOLATION\nAll operations, tracking parameters, liquid assets, and computational balance data are recorded exclusively inside isolated client environments. This application operates inside a completely decentralized sandbox. No external synchronization hooks exist to bridge your input data to a broader network.\n\n2. NETWORK DISCONNECT GUARANTEE\nThis architecture guarantees offline-first operational parameters. Your transaction history, subscription tokens, category limits, and goal trackers are never shared with developer endpoints, analytic channels, or third-party marketing services.\n\n3. RIGHT TO PURGE\nData sovereignty belongs to the active user. You hold explicit rights to force-wipe all matrices instantly. Standard uninstallation of the software package physically obliterates the core Hive database vectors, permanently erasing your operational imprint from the device memory blocks.',
                       isDark: isDark,
                     ),
                   ),
@@ -205,7 +245,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     context,
                     SystemDocumentScreen(
                       title: 'DATA SECURITY',
-                      content: '1. LOCAL STORAGE LAYERS\nApplication persistence vectors utilize memory-mapped file structures (Hive Data Boxes) positioned rigidly inside standard, OS-protected application directory bounds. These files are inaccessible to parallel installed system software packages or file explorers without root access.\n\n2. CRYPTOGRAPHIC INTEGRITY\nData blocks remain locally unencrypted by default to drastically minimize compute overhead during operational rendering, ensuring a perfectly smooth UI layer. Your physical platform protection parameters (Device PIN, Passcode, and Biometrics) serve as the impenetrable primary barrier against visual data breaches.\n\n3. CORRUPTION MITIGATION\nInternal matrix validations monitor hardware-level storage corruptions continuously. If system validation determines that the internal database file mapping has been manipulated, the engine will structurally hard-reset parameters to ensure the application maintains baseline stability and prevents calculation overflow.',
+                      content:
+                          '1. LOCAL STORAGE LAYERS\nApplication persistence vectors utilize memory-mapped file structures (Hive Data Boxes) positioned rigidly inside standard, OS-protected application directory bounds. These files are inaccessible to parallel installed system software packages or file explorers without root access.\n\n2. CRYPTOGRAPHIC INTEGRITY\nData blocks remain locally unencrypted by default to drastically minimize compute overhead during operational rendering, ensuring a perfectly smooth UI layer. Your physical platform protection parameters (Device PIN, Passcode, and Biometrics) serve as the impenetrable primary barrier against visual data breaches.\n\n3. CORRUPTION MITIGATION\nInternal matrix validations monitor hardware-level storage corruptions continuously. If system validation determines that the internal database file mapping has been manipulated, the engine will structurally hard-reset parameters to ensure the application maintains baseline stability and prevents calculation overflow.',
                       isDark: isDark,
                     ),
                   ),
@@ -220,14 +261,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     context,
                     SystemDocumentScreen(
                       title: 'USER GUIDE',
-                      content: '1. MATRIX INITIALIZATION & LIMITS\nBegin navigation via the MATRIX deck. Open configuration windows to initialize specific operational bounds. Enter standard category labels and inject fluid funding thresholds to establish your maximum spending allocations per cycle.\n\n2. LIQUIDITY MANAGEMENT\nAccess active liquidity via the LEDGER. First, append an incoming resource transaction (Monthly Income). You may then record mandatory capital outflows. Tracking engines will calculate margin statistics instantaneously against your configured categories.\n\n3. OVERRUN MITIGATION\nIf your computational outflow permanently breaks configuration bounds, matrix components will flag dynamic red alert warnings. Monitor your POOLS to restructure capital vectors efficiently, and clear unused passive drains in the SUBS section.',
+                      content:
+                          '1. MATRIX INITIALIZATION & LIMITS\nBegin navigation via the MATRIX deck. Open configuration windows to initialize specific operational bounds. Enter standard category labels and inject fluid funding thresholds to establish your maximum spending allocations per cycle.\n\n2. LIQUIDITY MANAGEMENT\nAccess active liquidity via the LEDGER. First, append an incoming resource transaction (Monthly Income). You may then record mandatory capital outflows. Tracking engines will calculate margin statistics instantaneously against your configured categories.\n\n3. OVERRUN MITIGATION\nIf your computational outflow permanently breaks configuration bounds, matrix components will flag dynamic red alert warnings. Monitor your POOLS to restructure capital vectors efficiently, and clear unused passive drains in the SUBS section.',
                       isDark: isDark,
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 32),
-                Text('NETWORK LINKS', style: TextStyle(color: systemTextColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter')),
+                Text('NETWORK LINKS',
+                    style: TextStyle(
+                        color: systemTextColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                        fontFamily: 'Inter')),
                 const SizedBox(height: 16),
 
                 _buildActionTile(
@@ -248,14 +296,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                 const Spacer(),
 
-                // SYSTEM FOOTER BOUNDARY (Line Removed)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Text(
                     'BUILT BY DARSHSERAPHIC',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: textSub, fontSize: 10, letterSpacing: 0.5, fontWeight: FontWeight.bold, fontFamily: 'Inter'),
+                    style: TextStyle(
+                        color: textSub,
+                        fontSize: 10,
+                        letterSpacing: 0.5,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter'),
                   ),
                 ),
               ],
@@ -285,8 +337,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: TextStyle(color: textMain, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 0.2, fontFamily: 'Inter')),
-            Text(valueText, style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5, fontFamily: 'Inter')),
+            Text(label,
+                style: TextStyle(
+                    color: textMain,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.2,
+                    fontFamily: 'Inter')),
+            Text(valueText,
+                style: TextStyle(
+                    color: textMain,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    fontFamily: 'Inter')),
           ],
         ),
       ),
@@ -306,7 +370,8 @@ class SystemDocumentScreen extends StatelessWidget {
     required this.isDark,
   });
 
-  Widget _buildParsedContent(String documentText, Color textMain, Color textSub) {
+  Widget _buildParsedContent(
+      String documentText, Color textMain, Color textSub) {
     final sections = documentText.split('\n\n');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +438,13 @@ class SystemDocumentScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.keyboard_arrow_left, color: textSub, size: 18),
                       const SizedBox(width: 4),
-                      Text('[ BACK ]', style: TextStyle(color: textSub, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5, fontFamily: 'Inter')),
+                      Text('[ BACK ]',
+                          style: TextStyle(
+                              color: textSub,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                              fontFamily: 'Inter')),
                     ],
                   ),
                 ),
@@ -381,7 +452,12 @@ class SystemDocumentScreen extends StatelessWidget {
               const SizedBox(height: 32),
               Text(
                 title,
-                style: TextStyle(color: textMain, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.0, fontFamily: 'Inter'),
+                style: TextStyle(
+                    color: textMain,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                    fontFamily: 'Inter'),
               ),
               const SizedBox(height: 32),
               Expanded(
