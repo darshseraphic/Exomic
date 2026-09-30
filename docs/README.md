@@ -28,3 +28,8 @@ The site is static and can be deployed to GitHub Pages, Netlify, Vercel, Cloudfl
 
 ## Asset notes
 The homepage uses the supplied Exomic screenshots from `assets/`, with light/dark image swapping tied to the site theme. The screenshots include transparent outer pixels; the page intentionally does not add a black wrapper behind them.
+
+
+## Globe dependency
+The Privacy section uses the COBE WebGL globe by Shu Ding, loaded from jsDelivr at runtime (`cobe@2.0.1`). COBE is MIT licensed.
+Repository: https://github.com/shuding/cobe

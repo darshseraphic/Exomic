@@ -154,30 +154,50 @@
     </section>
 
     <section class="section page-width privacy-section" id="privacy">
-      <div class="privacy-copy">
-        <div class="eyebrow-line"><span></span><span>06 / PRIVACY</span></div>
-        <h2>No cloud theater.<br>Just local storage.</h2>
-        <p>The project specification describes local Hive boxes, encrypted storage and secure platform key access. Core financial calculations are handled on the device rather than through a remote financial database.</p>
-        <div class="privacy-pills">
-          <span>Encrypted local storage</span>
-          <span>Offline-first data path</span>
-          <span>Riverpod state updates</span>
-          <span>No background sync dependency</span>
+      <div class="privacy-layout">
+        <div class="privacy-copy">
+          <div class="eyebrow-line"><span></span><span>06 / PRIVACY</span></div>
+          <h2>No cloud theater.<br>Just local storage.</h2>
+          <p>The project specification describes local Hive boxes, encrypted storage and secure platform key access. Core financial calculations are handled on the device rather than through a remote financial database.</p>
+          <div class="privacy-pills">
+            <span>Encrypted local storage</span>
+            <span>Offline-first data path</span>
+            <span>Riverpod state updates</span>
+            <span>No background sync dependency</span>
+          </div>
+        </div>
+        <div class="privacy-globe" aria-hidden="true">
+          <canvas id="exomicGlobe" width="720" height="720"></canvas>
         </div>
       </div>
     </section>
 
-    <section class="section page-width details-section">
-      <div>
+    <section class="section page-width details-section" id="engine">
+      <div class="engine-intro">
         <div class="eyebrow-line"><span></span><span>07 / ENGINE</span></div>
-        <h2>Yours.<br>Down to the smallest detail.</h2>
-        <p>Under the quiet UI, Exomic maps financial models into local boxes and reacts to changes through Riverpod.</p>
-        <div class="detail-list">
-          <div><span>01</span><strong>ExpenseModel</strong><small>Transactions, category, amount and timestamp.</small></div>
-          <div><span>02</span><strong>SubscriptionModel</strong><small>Recurring charges, renewal dates and active status.</small></div>
-          <div><span>03</span><strong>SavingGoalModel</strong><small>Targets, balances, deadlines and contribution pace.</small></div>
-          <div><span>04</span><strong>BudgetLimitModel</strong><small>Caps, category state and current outflow.</small></div>
-        </div>
+        <h2>Four systems.<br>One financial engine.</h2>
+      </div>
+      <div class="engine-grid">
+        <article class="engine-item">
+          <span class="engine-number">01 — EXPENSE</span>
+          <h3>Your financial timeline.</h3>
+          <p>Log transactions and keep the active month's outflows visible.</p>
+        </article>
+        <article class="engine-item">
+          <span class="engine-number">02 — SUBSCRIPTION</span>
+          <h3>Know what repeats.</h3>
+          <p>Track recurring services, renewal dates, costs, and active plans.</p>
+        </article>
+        <article class="engine-item">
+          <span class="engine-number">03 — SAVING</span>
+          <h3>Turn a target into a pace.</h3>
+          <p>Set a goal and deadline; Exomic calculates the daily contribution required.</p>
+        </article>
+        <article class="engine-item">
+          <span class="engine-number">04 — BUDGET</span>
+          <h3>See what remains.</h3>
+          <p>Set category caps and calculate unassigned liquidity from your actual obligations.</p>
+        </article>
       </div>
     </section>
 
@@ -206,13 +226,14 @@
 
     <section class="page-width final-cta-section">
       <div class="final-cta">
-        <div class="eyebrow-line light-line"><span></span><span>EXOMIC / FINAL STATE</span></div>
         <div class="final-cta-content">
+          <div class="eyebrow-line light-line"><span></span><span>EXOMIC / FINAL STATE</span></div>
           <h2>Your money.<br><em>Your device.</em></h2>
           <p>Four focused workspaces. One local financial picture.</p>
-          <div class="hero-actions final-cta-actions">
-            <a class="light-button" href="https://github.com/darshseraphic/Exomic" target="_blank" rel="noreferrer">Open the source <span>↗</span></a>
-            <a class="light-link" href="contact.html">Say hello <span>→</span></a>
+          <div class="final-cta-actions">
+            <a class="final-text-link" href="https://github.com/darshseraphic/Exomic" target="_blank" rel="noreferrer">Open the source <span>↗</span></a>
+            <span class="final-link-divider" aria-hidden="true"></span>
+            <a class="final-text-link" href="contact.html">Say hello <span>→</span></a>
           </div>
         </div>
       </div>
@@ -240,6 +261,7 @@
       <span>© <span id="year"></span> Exomic</span>
       <span>Local-first by design.</span>
     </div>
+    <div class="footer-ghost" aria-hidden="true">EXOMIC</div>
   </footer>
 
   <script src="script.js"></script>
