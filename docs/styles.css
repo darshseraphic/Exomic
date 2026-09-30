@@ -258,8 +258,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 @media (max-width: 900px) {
   .page-width { width: min(calc(100% - 48px), var(--page)); }
-  .site-header { padding-inline: 24px; }
+  .site-header { padding-inline: 24px; grid-template-columns: 1fr auto; }
   .top-nav { display: none; }
+  .top-actions { justify-self: end; }
   .hero { grid-template-columns: 1fr .7fr; gap: 40px; }
   .hero-phone-wrap { min-height: 420px; }
   .hero-phone-wrap::after { width: 320px; height: 320px; }
