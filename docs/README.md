@@ -10,7 +10,11 @@ The product showcase intentionally contains four screens and omits Settings:
 3. Saving — `https://github.com/user-attachments/assets/d3d5c581-af4c-45ad-b41a-3dde5b3b11ca`
 4. Budget — `https://github.com/user-attachments/assets/fe288ea2-f9cd-46ff-8bdd-e37f3bba10f4`
 
-The hero reuses the Expense dark image. All phone frames are intentionally unrotated/straight.
+The hero uses the theme-aware Expense image. All phone frames are intentionally unrotated/straight.
+
+## Distribution
+The homepage now exposes the Android ARM64 release as the primary download action:
+`https://github.com/darshseraphic/Exomic/releases/download/v0.1.5/app-arm64-v8a-release.apk`
 
 ## Contact behavior
 `contact.html` mirrors the reference page's two-card layout. Submitting the form opens Gmail compose addressed to `darsh.seraphic@gmail.com` with the name, email and message prefilled.
@@ -23,6 +27,7 @@ The hero reuses the Expense dark image. All phone frames are intentionally unrot
 - `security.html`
 - `styles.css`
 - `script.js`
+- `cobe-minimal-test.html`
 
 The site is static and can be deployed to GitHub Pages, Netlify, Vercel, Cloudflare Pages, or any static host.
 

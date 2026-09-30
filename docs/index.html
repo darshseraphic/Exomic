@@ -11,7 +11,7 @@
 <body>
   <header class="site-header">
     <a class="brand" href="#top" aria-label="Exomic home">
-      <span class="brand-mark" aria-hidden="true"></span>
+      <img class="brand-mark" src="assets/logo.png" alt="">
       <span>Exomic</span>
     </a>
     <nav class="top-nav" aria-label="Primary navigation">
@@ -34,9 +34,10 @@
         <h1>Money tracking<br>without the noise.</h1>
         <p class="hero-lede">Exomic keeps expenses, subscriptions, savings goals and budgets on your device. No cloud-sync dependency. No analytics layer. Just the numbers you care about.</p>
         <div class="hero-actions">
-          <a class="dark-button" href="https://github.com/darshseraphic/Exomic" target="_blank" rel="noreferrer">View on GitHub <span>↗</span></a>
+          <a class="dark-button" href="https://github.com/darshseraphic/Exomic/releases/download/v0.1.5/app-arm64-v8a-release.apk">Download APK <span>↗</span></a>
           <a class="plain-link" href="#screens">See the screens <span>↓</span></a>
         </div>
+        <div class="hero-meta">ANDROID / v0.1.5 <span></span> ARM64 RELEASE</div>
       </div>
 
       <div class="hero-phone-wrap reveal delay-1">
@@ -73,7 +74,8 @@
       <div class="screen-grid">
         <article class="screen-card screen-card-dark reveal">
           <div class="screen-card-head"><span>01</span><span>EXPENSE</span></div>
-          <h4>Log the outflow.<br>See the running total.</h4>
+          <h4>Your financial timeline.</h4>
+          <p class="screen-card-description">Log transactions and keep the active month's outflows visible.</p>
           <figure class="phone phone-card phone-dark">
             <img src="assets/expense-light.png" data-light-src="assets/expense-light.png" data-dark-src="assets/expense-dark.png" alt="Exomic Expense tab" loading="lazy">
           </figure>
@@ -81,7 +83,8 @@
 
         <article class="screen-card reveal delay-1">
           <div class="screen-card-head"><span>02</span><span>SUBSCRIPTION</span></div>
-          <h4>Track recurring charges<br>and renewal dates.</h4>
+          <h4>Know what repeats.</h4>
+          <p class="screen-card-description">Track recurring services, renewal dates, costs, and active plans.</p>
           <figure class="phone phone-card">
             <img src="assets/subscription-light.png" data-light-src="assets/subscription-light.png" data-dark-src="assets/subscription-dark.png" alt="Exomic Subscription tab" loading="lazy">
           </figure>
@@ -89,7 +92,8 @@
 
         <article class="screen-card reveal">
           <div class="screen-card-head"><span>03</span><span>SAVING</span></div>
-          <h4>Turn a target into<br>a daily pace.</h4>
+          <h4>Turn a target into a pace.</h4>
+          <p class="screen-card-description">Set a goal and deadline; Exomic calculates the daily contribution required.</p>
           <figure class="phone phone-card">
             <img src="assets/saving-light.png" data-light-src="assets/saving-light.png" data-dark-src="assets/saving-dark.png" alt="Exomic Saving tab" loading="lazy">
           </figure>
@@ -97,7 +101,8 @@
 
         <article class="screen-card reveal delay-1">
           <div class="screen-card-head"><span>04</span><span>BUDGET</span></div>
-          <h4>See category limits<br>before they break.</h4>
+          <h4>See what remains.</h4>
+          <p class="screen-card-description">Set category caps and calculate unassigned liquidity from your actual obligations.</p>
           <figure class="phone phone-card">
             <img src="assets/budget-light.png" data-light-src="assets/budget-light.png" data-dark-src="assets/budget-dark.png" alt="Exomic Budget tab" loading="lazy">
           </figure>
@@ -105,20 +110,8 @@
       </div>
     </section>
 
-    <section class="section page-width feature-band">
-      <div class="eyebrow-line"><span></span><span>02 / EVERYTHING YOU NEED</span></div>
-      <h2>Everything you need.<br>Nothing you don't.</h2>
-      <div class="feature-table">
-        <div class="feature-row feature-head"><span>WORKSPACE</span><span>WHAT IT DOES</span><span>WHY IT MATTERS</span></div>
-        <div class="feature-row"><span>EXPENSE</span><span>Chronological transaction history with a rolling monthly total.</span><span>See current spending in one place.</span></div>
-        <div class="feature-row"><span>SUBSCRIPTION</span><span>Recurring costs with renewal dates and active status.</span><span>Keep fixed drains visible.</span></div>
-        <div class="feature-row"><span>SAVING</span><span>Target balances, deadlines and daily pace calculations.</span><span>Turn long-term goals into a concrete next step.</span></div>
-        <div class="feature-row"><span>BUDGET</span><span>Category caps, outflows, margins and breach state.</span><span>Make overspend visible immediately.</span></div>
-      </div>
-    </section>
-
     <section class="section page-width balance-section">
-      <div class="eyebrow-line"><span></span><span>03 / THE CONNECTION</span></div>
+      <div class="eyebrow-line"><span></span><span>02 / THE CONNECTION</span></div>
       <div class="balance-layout">
         <div>
           <h2>One financial view,<br><em>kept in sync.</em></h2>
@@ -134,17 +127,19 @@
 
     <section class="section page-width consistency-section">
       <div class="consistency-copy">
-        <div class="eyebrow-line"><span></span><span>04 / CONSISTENCY</span></div>
+        <div class="eyebrow-line"><span></span><span>03 / CONSISTENCY</span></div>
         <h2>A month of money,<br>in a single glance.</h2>
         <p>The ledger filters the active month from timestamps and keeps the current total at the top. The point is not more charts — it is a clearer rhythm of spending.</p>
       </div>
-      <div class="month-visual app-shot" aria-label="Exomic Expense screen showing the current month's running total and transaction history">
-        <img src="assets/expense-light.png" data-light-src="assets/expense-light.png" data-dark-src="assets/expense-dark.png" alt="Exomic Expense screen" loading="lazy">
+      <div class="month-visual" aria-label="Exomic Expense screen showing the current month's running total and transaction history">
+        <figure class="phone month-phone">
+          <img src="assets/expense-light.png" data-light-src="assets/expense-light.png" data-dark-src="assets/expense-dark.png" alt="Exomic Expense screen close-up" loading="lazy">
+        </figure>
       </div>
     </section>
 
     <section class="section page-width steps-section">
-      <div class="eyebrow-line"><span></span><span>05 / THE FLOW</span></div>
+      <div class="eyebrow-line"><span></span><span>04 / THE FLOW</span></div>
       <h2>Three steps.<br>That's the whole product.</h2>
       <div class="steps-grid">
         <article><span>01</span><h3>Record your reality.</h3><p>Add an outflow with a description, amount and category.</p></article>
@@ -156,7 +151,7 @@
     <section class="section page-width privacy-section" id="privacy">
       <div class="privacy-layout">
         <div class="privacy-copy">
-          <div class="eyebrow-line"><span></span><span>06 / PRIVACY</span></div>
+          <div class="eyebrow-line"><span></span><span>05 / PRIVACY</span></div>
           <h2>No cloud theater.<br>Just local storage.</h2>
           <p>The project specification describes local Hive boxes, encrypted storage and secure platform key access. Core financial calculations are handled on the device rather than through a remote financial database.</p>
           <div class="privacy-pills">
@@ -174,35 +169,39 @@
 
     <section class="section page-width details-section" id="engine">
       <div class="engine-intro">
-        <div class="eyebrow-line"><span></span><span>07 / ENGINE</span></div>
-        <h2>Four systems.<br>One financial engine.</h2>
+        <div class="eyebrow-line"><span></span><span>06 / ENGINE</span></div>
+        <h2>Data stays close.<br><em>Updates stay connected.</em></h2>
+        <p>Exomic keeps persistence, encryption and reactive state on the device so the four workspaces can share one financial picture without depending on a remote service.</p>
       </div>
       <div class="engine-grid">
         <article class="engine-item">
-          <span class="engine-number">01 — EXPENSE</span>
-          <h3>Your financial timeline.</h3>
-          <p>Log transactions and keep the active month's outflows visible.</p>
+          <span class="engine-number">01 — HIVE</span>
+          <h3>Local records.</h3>
+          <p>Transactions, subscriptions, savings goals and budget limits persist in local Hive boxes.</p>
         </article>
         <article class="engine-item">
-          <span class="engine-number">02 — SUBSCRIPTION</span>
-          <h3>Know what repeats.</h3>
-          <p>Track recurring services, renewal dates, costs, and active plans.</p>
+          <span class="engine-number">02 — AES-256</span>
+          <h3>Encrypted at rest.</h3>
+          <p>Local boxes are opened with AES-256 encryption using a key sourced from the platform's secure storage layer.</p>
         </article>
         <article class="engine-item">
-          <span class="engine-number">03 — SAVING</span>
-          <h3>Turn a target into a pace.</h3>
-          <p>Set a goal and deadline; Exomic calculates the daily contribution required.</p>
+          <span class="engine-number">03 — RIVERPOD</span>
+          <h3>One state graph.</h3>
+          <p>Provider updates propagate changes across the ledger, savings and budget views without a full-screen reload.</p>
         </article>
         <article class="engine-item">
-          <span class="engine-number">04 — BUDGET</span>
-          <h3>See what remains.</h3>
-          <p>Set category caps and calculate unassigned liquidity from your actual obligations.</p>
+          <span class="engine-number">04 — OFFLINE-FIRST</span>
+          <h3>No cloud dependency.</h3>
+          <p>Core storage and calculations are designed to run on-device without external network dependencies.</p>
         </article>
+      </div>
+      <div class="engine-flow" aria-label="Exomic local data flow">
+        <span>INPUT</span><b>→</b><span>HIVE</span><b>→</b><span>PROVIDER</span><b>→</b><span>VIEW</span>
       </div>
     </section>
 
     <section class="section page-width compare-section">
-      <div class="eyebrow-line"><span></span><span>08 / WHY THIS SHAPE</span></div>
+      <div class="eyebrow-line"><span></span><span>07 / WHY THIS SHAPE</span></div>
       <h2>A focused tool<br>should feel focused.</h2>
       <div class="comparison-table">
         <div class="comparison-row comparison-head"><span>QUESTION</span><span>EXOMIC</span><span>APPROACH</span></div>
@@ -214,7 +213,7 @@
     </section>
 
     <section class="section page-width faq-section">
-      <div class="eyebrow-line"><span></span><span>09 / QUICK ANSWERS</span></div>
+      <div class="eyebrow-line"><span></span><span>08 / QUICK ANSWERS</span></div>
       <h2>Quick answers.</h2>
       <div class="faq-list">
         <details><summary>Does Exomic require the internet?</summary><p>The project describes the financial data engine as offline-first and without external network dependencies for core calculations and storage.</p></details>
@@ -231,6 +230,8 @@
           <h2>Your money.<br><em>Your device.</em></h2>
           <p>Four focused workspaces. One local financial picture.</p>
           <div class="final-cta-actions">
+            <a class="final-text-link" href="https://github.com/darshseraphic/Exomic/releases/download/v0.1.5/app-arm64-v8a-release.apk">Download APK <span>↗</span></a>
+            <span class="final-link-divider" aria-hidden="true"></span>
             <a class="final-text-link" href="https://github.com/darshseraphic/Exomic" target="_blank" rel="noreferrer">Open the source <span>↗</span></a>
             <span class="final-link-divider" aria-hidden="true"></span>
             <a class="final-text-link" href="contact.html">Say hello <span>→</span></a>
@@ -243,7 +244,7 @@
   <footer class="site-footer page-width">
     <div class="footer-main">
       <div>
-        <a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"></span><span>Exomic</span></a>
+        <a class="brand footer-brand" href="#top"><img class="brand-mark" src="assets/logo.png" alt=""><span>Exomic</span></a>
         <p>Private financial tracking, built around a local-first engine.</p>
       </div>
       <div class="footer-links">
