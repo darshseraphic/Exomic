@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Contact Exomic by email.">
+  <meta name="theme-color" content="#ffffff">
+  <title>Contact — Exomic</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="subpage">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Exomic home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>Exomic</span>
+    </a>
+    <span></span>
+    <div class="top-actions">
+      <button class="theme-button" id="themeToggle" type="button" aria-label="Toggle theme"><span aria-hidden="true">☾</span></button>
+      <a class="home-button" href="index.html">← Home</a>
+    </div>
+  </header>
+
+  <main class="contact-main">
+    <div class="contact-shell">
+      <div class="eyebrow-line"><span></span><span>CONTACT</span></div>
+      <h1>Say hello.</h1>
+      <p class="contact-lede">Bug reports, ideas, kind words — send a note below or write directly. The form opens Gmail with the message already filled in.</p>
+
+      <div class="contact-grid">
+        <aside class="contact-card contact-info">
+          <div class="mail-icon" aria-hidden="true">✉</div>
+          <h2>Email us</h2>
+          <p>Prefer email? Reach us directly at:</p>
+          <a class="email-link" href="mailto:darsh.seraphic@gmail.com">darsh.seraphic@gmail.com</a>
+          <p class="contact-copy">For a faster response, keep the subject specific. Please do not include passwords, payment credentials or other sensitive information in a regular email.</p>
+          <p class="contact-copy">Your note stays an email conversation — the form does not send your message to a separate Exomic server.</p>
+        </aside>
+
+        <section class="contact-card contact-form-card">
+          <form id="contactForm">
+            <label for="name">YOUR NAME</label>
+            <input id="name" name="name" type="text" autocomplete="name" placeholder="Alex" required>
+
+            <label for="email">EMAIL</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+
+            <label for="message">MESSAGE</label>
+            <textarea id="message" name="message" rows="6" placeholder="What's on your mind?" required></textarea>
+
+            <button class="dark-button form-submit" type="submit"><span aria-hidden="true">↗</span> Send message</button>
+            <p class="form-note">Gmail will open with <strong>darsh.seraphic@gmail.com</strong> as the destination and your message prefilled.</p>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer page-width">
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Exomic</span>
+      <a href="index.html">Back to home ↑</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    const form = document.getElementById('contactForm');
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const subject = `Exomic contact from ${name || 'website visitor'}`;
+      const body = [
+        `Hi Exomic,`,
+        '',
+        `Name: ${name}`,
+        `Email: ${email}`,
+        '',
+        message
+      ].join('\n');
+      const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent('darsh.seraphic@gmail.com')}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = gmail;
+    });
+  </script>
+</body>
+</html>
