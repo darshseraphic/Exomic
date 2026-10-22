@@ -1,7 +1,5 @@
 # Exomic website design audit
 
-## Reference pattern observed
-
 The supplied DoingNow screenshots use a restrained, editorial landing-page system rather than a conventional SaaS dashboard. The hierarchy comes from large black typography, small uppercase labels, generous white space, thin borders, repeated phone mockups and a small number of high-contrast cards.
 
 The desktop layout is a sequence of short, strongly separated stories: hero + phone, compact metrics, feature intro, visual collage, utility section, detail section, comparison/table, FAQ, then a large black final CTA. The mobile layout preserves the same order but collapses everything to a single column and lets the phone mockups become the primary visual anchors.
