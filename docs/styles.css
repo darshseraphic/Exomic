@@ -283,8 +283,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .brand-mark { width: 22px; height: 22px; }
   .home-button { padding: 9px 12px; }
   .hero { min-height: auto; display: flex; flex-direction: column; align-items: stretch; gap: 26px; padding: 62px 0 58px; }
-  .hero h1 { font-size: 58px; }
-  .hero-meta { font-size: 8px; }
+  /* On phones, center the hero copy and scale the headline to the viewport. */
+  .hero-copy { width: 100%; max-width: none; align-items: center; text-align: center; }
+  .hero h1 { max-width: none; margin: 22px auto 16px; font-size: clamp(34px, 9.4vw, 44px); line-height: .98; text-wrap: balance; }
+  .hero-lede { max-width: 38ch; margin-inline: auto; }
+  .hero-actions { justify-content: center; }
+  .hero-meta { font-size: 8px; justify-content: center; }
   .hero-phone-wrap { min-height: 365px; }
   .hero-phone-wrap::after { width: 280px; height: 280px; }
   .hero-phone { width: 200px; }
